@@ -3,6 +3,23 @@
 Execution date: **2026-09-30**. Scope: the two synthetic MCP backends, not the
 complete afternoon student lab or a teacher showcase.
 
+## Musical instrument domain
+
+The business vocabulary is Aster Vale Instruments, aligned with the fictional
+20-model workshop instrument catalogue. Technical deployment/authentication,
+tool names, endpoints, runtime versions and container layout are retained.
+Local HTTP journeys passed all 16 tools in both protocol eras, covering every
+instrument family, partner service, complaint category, transaction type and
+serial lookup, domain statistics, model coverage and seeded assignment
+eligibility. The seven existing Azure safety mocks also passed.
+An independent domain/implementation/Educator review inspected the actual
+backend, verifier, operator contract and session Canvas examples, checked all
+20 model identities/families and 120/90 fixture records, and reported no
+blocking or material finding. This local review does not by itself establish
+the outcome of a subsequent cloud rollout.
+
+## Original technical qualification
+
 - FastMCP 4.0.5, Python 3.13.15; isolated approved-feed `uv.lock` resolved.
   A clean committed-source export, new virtualenv and `uv sync --frozen
   --no-cache` passed both complete local HTTP journeys on Windows.

@@ -14,12 +14,14 @@ async def seed_edits(state, key):
     async with mcp_client(state["partners_url"], key) as pc, mcp_client(state["complaints_url"], key) as cc:
         seed = await call(pc, "get_partner", {"partner_id": "partner-001"})
         payload = {k: v for k, v in seed.items() if k not in {"id", "version", "updated_at"}}
-        payload["name"] = "Synthetic Reset Verification"
+        payload["name"] = "Synthetic Music Partner Reset Verification"
         partner = await call(pc, "create_partner", {"partner": payload})
         complaint = await call(cc, "create_complaint", {"complaint": {
             "customer": {"name": "Reset Test", "email": "reset@customers.example", "country_code": "CZ"},
-            "subject": "Reset sentinel", "description": "This synthetic record must disappear after reset.",
-            "category": "communication", "product": "Heat pump", "order_reference": "RESET-TEST",
+            "subject": "Instrument repair reset sentinel", "description": "This synthetic guitar repair case must disappear after reset.",
+            "category": "communication", "product": "EG-300 Switchrail solid-body electric guitar",
+            "instrument_family": "plucked_strings", "transaction_type": "repair",
+            "instrument_serial": "AVI-RESET-TEST", "order_reference": "RESET-TEST",
         }})
         return partner["id"], complaint["id"]
 

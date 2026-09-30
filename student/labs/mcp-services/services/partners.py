@@ -7,15 +7,15 @@ from pydantic import Field
 
 from .common import Limit, Offset, Store, Version, http_app, server
 from .fixtures import partners
-from .models import Identifier, Partner, PartnerInput
+from .models import Identifier, Partner, PartnerInput, PartnerService, Specialty
 
 store = Store(partners())
-mcp = server("Authorized service partners")
+mcp = server("Authorized musical instrument partners")
 
 
 @mcp.tool(annotations={"readOnlyHint": True})
 def get_partner(partner_id: Identifier) -> Partner:
-    """Get one synthetic partner, including its version for safe updates."""
+    """Get one synthetic musical-instrument dealer, repairer or rental partner, including its version for safe updates."""
     return store.get(partner_id)
 
 
@@ -33,21 +33,23 @@ def search_partners(
     city: Annotated[str | None, Field(max_length=200)] = None,
     status: Literal["active", "suspended", "pending"] | None = None,
     tier: Literal["standard", "silver", "gold", "platinum"] | None = None,
-    specialty: Literal["hvac", "appliances", "solar", "electrical", "plumbing"] | None = None,
+    specialty: Specialty | None = None,
+    service: PartnerService | None = None,
     language: Annotated[str | None, Field(max_length=200)] = None,
     emergency_service: bool | None = None,
     min_rating: Annotated[float, Field(ge=0, le=5)] = 0,
     min_capacity: Annotated[int, Field(ge=0, le=500)] = 0,
     offset: Offset = 0, limit: Limit = 25,
 ) -> dict:
-    """Search with AND filters. Text matches name, city, street, contact and certification, case-insensitively."""
+    """Find musical-instrument partners with AND filters: specialty is an instrument family; service is sales, repairs, rental, maintenance, setup, tuning or restoration. Text matches name, address, contact, certifications, specialties and services case-insensitively."""
     with store.lock:
         rows = [p for p in store.rows.values()
-                if (not query or query.casefold() in " ".join([p.name, p.address.city, p.address.street, p.contact_name, *p.certifications]).casefold())
+                if (not query or query.casefold() in " ".join([p.name, p.address.city, p.address.street, p.contact_name, *p.certifications, *p.specialties, *p.services]).casefold())
                 and (country_code is None or p.address.country_code == country_code)
                 and (city is None or city.casefold() in p.address.city.casefold())
                 and (status is None or p.status == status) and (tier is None or p.tier == tier)
                 and (specialty is None or specialty in p.specialties)
+                and (service is None or service in p.services)
                 and (language is None or language.casefold() in [s.casefold() for s in p.languages])
                 and (emergency_service is None or p.emergency_service == emergency_service)
                 and p.rating >= min_rating and p.capacity_per_week >= min_capacity]

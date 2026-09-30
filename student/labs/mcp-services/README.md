@@ -1,8 +1,10 @@
 # MCP backend operator contract
 
 Backend assets for the planned tools chapter, not a complete attendee lab.
-Two independent Python services: **120 fictional authorized service partners**
-and **90 synthetic complaints**. Real city/street geography is combined with
+Two independent Python services for **Aster Vale Instruments**, the fictional
+musical-instrument manufacturer used in the workshop: **120 authorized dealers,
+repair workshops and rental partners** and **90 synthetic customer complaints**.
+Real city/street geography is combined with
 invented premises, contacts and organizations. Coordinates are city centers,
 not verified service locations. `.example` email/web addresses and telephone
 numbers are intentionally nonoperational.
@@ -33,16 +35,46 @@ a generated ID. Exact-repeat PUT preserves the version.
 
 Search filters use AND, text matches are case-insensitive, pages contain
 `items`, `total`, `offset`, `limit`, `next_offset`. Limit is 1-100.
-Partner filters include country, city, authorization status, tier, specialty,
+Partner filters include country, city, authorization status, tier, instrument family, service,
 language, emergency availability, rating and capacity. Complaint filters include
 customer email, country, category, priority, lifecycle status, assigned partner
-and overdue state. Discover precise argument schemas using `tools/list`.
+and overdue state, instrument family, transaction type and instrument serial.
+Discover precise argument schemas using `tools/list`.
+
+| Field | Values |
+| --- | --- |
+| Partner `specialties`; complaint `instrument_family` | `plucked_strings`, `bowed_strings`, `keyboards`, `woodwinds`, `brass`, `percussion` |
+| Partner `services`; search `service` | `sales`, `repairs`, `rental`, `maintenance`, `setup`, `tuning`, `restoration` |
+| Complaint `transaction_type` | `purchase`, `repair`, `rental`, `warranty` |
+| Complaint `category` | `delivery_delay`, `instrument_quality`, `repair_quality`, `billing`, `communication`, `warranty`, `rental` |
+
+For example, search partners with `{"country_code":"CZ","specialty":"plucked_strings","service":"rental","status":"active"}`.
+Search complaints with `{"category":"repair_quality","transaction_type":"repair","priority":"high"}`.
+All 20 instrument models in the workshop corpus appear in the fixtures:
+guitars/bass/harp, violin/viola/cello/double bass, pianos, woodwinds, brass and
+percussion. Serial numbers use the synthetic `AVI-DEMO-` prefix. Manufacturing
+defects, repair quality, delayed deliveries, invoices, unanswered estimates,
+warranty decisions and rental deposits are represented.
+Partners distinguish the supported instrument families from the services they
+provide. `capacity_per_week` counts instrument appointments/transactions;
+`emergency_service` denotes urgent instrument support before a performance.
+Seeded assigned cases reference an active partner that supports the instrument
+family and the transaction's required service. Runtime assignment remains a
+client-side eligibility check, not a cross-service foreign key.
+
+The music domain replaces the earlier building-services vocabulary:
+`specialty="hvac"` and `category="late_arrival"` are not accepted. Tool names,
+authentication, endpoints, version checks and pagination are unchanged. Existing
+create clients can omit `services` (defaults to sales/repairs), `instrument_family`
+(defaults to plucked strings), `transaction_type` (purchase) and the optional
+`instrument_serial`; use explicit fields for other instrument transactions.
 
 Complaint transitions: new -> triaged -> in_progress -> awaiting_customer or
 resolved -> closed. Awaiting_customer can return to in_progress or resolve;
 resolved can reopen to in_progress; closed can reopen to triaged.
 Resolution is mandatory when resolving, and reopening clears it.
-Assignment stores a reference only: verify the partner exists and is active
+Assignment stores a reference only: verify the partner exists, is active and
+supports the required instrument family and service
 with Partner MCP first. Partner deletion does not cascade into complaints.
 Cases retain timestamped notes/history. Record counts are bounded at 2,000;
 each case allows 100 notes and 100 transitions.
@@ -129,7 +161,9 @@ Expected results: both ready HTTPS `/mcp` URLs, actual
 all 6 + 10 tools in modern and legacy modes. `verify.py` runs from your
 workstation against the deployed endpoints, checks unauthenticated/incorrect
 keys on GET/POST/DELETE, pagination/filtering, create/get/update/delete,
-version conflicts, notes, all lifecycle branches and error paths.
+version conflicts, notes, all lifecycle branches and error paths, as well as
+every music-domain family/service/category/transaction filter, exact serial
+lookup, model coverage and seeded partner eligibility.
 It creates isolated test records and removes them in `finally`; it never
 modifies seeded cases. Run one verifier at a time without concurrent lab
 mutations because it also checks exact before/after totals.

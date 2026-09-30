@@ -8,10 +8,10 @@ from pydantic import Field
 
 from .common import Limit, Offset, Store, Version, http_app, server
 from .fixtures import complaints
-from .models import Category, Complaint, ComplaintInput, ComplaintPatch, Description, Event, Identifier, Note, Priority, Status, Text
+from .models import Category, Complaint, ComplaintInput, ComplaintPatch, Description, Event, Identifier, Note, Priority, Specialty, Status, Text, TransactionType
 
 store = Store(complaints())
-mcp = server("Customer complaints")
+mcp = server("Musical instrument customer complaints")
 TRANSITIONS = {
     "new": {"triaged"},
     "triaged": {"in_progress"},
@@ -40,18 +40,24 @@ def search_complaints(
     query: Annotated[str, Field(max_length=200)] = "",
     status: Status | None = None, priority: Priority | None = None,
     category: Category | None = None,
+    instrument_family: Specialty | None = None,
+    transaction_type: TransactionType | None = None,
+    instrument_serial: Annotated[str | None, Field(max_length=200)] = None,
     country_code: Annotated[str | None, Field(pattern=r"^[A-Z]{2}$")] = None,
     partner_id: Identifier | None = None,
     customer_email: Annotated[str | None, Field(max_length=200)] = None,
     overdue_only: bool = False, offset: Offset = 0, limit: Limit = 25,
 ) -> dict:
-    """AND filters; text matches subject, description, customer, product and order. Overdue excludes resolved/closed cases."""
+    """Find purchase, repair, rental and warranty complaints with AND filters. Text matches subject, description, customer, instrument/model, serial and order. Overdue excludes resolved/closed cases."""
     now = datetime.now(timezone.utc)
     with store.lock:
         rows = [c for c in store.rows.values()
-                if (not query or query.casefold() in " ".join([c.subject, c.description, c.customer.name, c.product, c.order_reference]).casefold())
+                if (not query or query.casefold() in " ".join([c.subject, c.description, c.customer.name, c.product, c.instrument_serial or "", c.order_reference]).casefold())
                 and (status is None or c.status == status) and (priority is None or c.priority == priority)
                 and (category is None or c.category == category)
+                and (instrument_family is None or c.instrument_family == instrument_family)
+                and (transaction_type is None or c.transaction_type == transaction_type)
+                and (instrument_serial is None or (c.instrument_serial or "").casefold() == instrument_serial.casefold())
                 and (country_code is None or c.customer.country_code == country_code)
                 and (partner_id is None or c.assigned_partner_id == partner_id)
                 and (customer_email is None or c.customer.email.casefold() == customer_email.casefold())
@@ -97,7 +103,7 @@ def update_complaint(complaint_id: Identifier, patch: ComplaintPatch, expected_v
 
 @mcp.tool(annotations={"readOnlyHint": False, "destructiveHint": False})
 def assign_complaint(complaint_id: Identifier, partner_id: Identifier, agent: Text, expected_version: Version) -> Complaint:
-    """Assign a partner reference and case owner. First verify the partner is active using the separate Partner MCP."""
+    """Assign a partner reference and case owner. First verify the partner is active and supports the instrument family and required sales/repair/rental service using Partner MCP."""
     with store.lock:
         row = store.check(complaint_id, expected_version)
         if row.status in {"resolved", "closed"}:
@@ -146,7 +152,7 @@ def transition_complaint(
 
 @mcp.tool(annotations={"readOnlyHint": True})
 def complaint_statistics() -> dict:
-    """Return case counts by status, priority and category, including open/overdue totals."""
+    """Return case counts by status, priority, category, instrument family and transaction type, including open/overdue totals."""
     with store.lock:
         rows = list(store.rows.values())
         open_rows = [c for c in rows if c.status not in {"resolved", "closed"}]
@@ -154,7 +160,9 @@ def complaint_statistics() -> dict:
                 "overdue": sum(c.due_at < datetime.now(timezone.utc) for c in open_rows),
                 "by_status": dict(Counter(c.status for c in rows)),
                 "by_priority": dict(Counter(c.priority for c in rows)),
-                "by_category": dict(Counter(c.category for c in rows))}
+                "by_category": dict(Counter(c.category for c in rows)),
+                "by_instrument_family": dict(Counter(c.instrument_family for c in rows)),
+                "by_transaction_type": dict(Counter(c.transaction_type for c in rows))}
 
 
 @mcp.tool(annotations={"readOnlyHint": False, "destructiveHint": True})

@@ -20,6 +20,10 @@ PARTNER_TOOLS = {"get_partner", "list_partners", "search_partners", "create_part
 COMPLAINT_TOOLS = {"get_complaint", "list_complaints", "search_complaints", "create_complaint",
                    "update_complaint", "assign_complaint", "add_complaint_note", "transition_complaint",
                    "complaint_statistics", "delete_complaint"}
+FAMILIES = {"plucked_strings", "bowed_strings", "keyboards", "woodwinds", "brass", "percussion"}
+SERVICES = {"sales", "repairs", "rental", "maintenance", "setup", "tuning", "restoration"}
+CATEGORIES = {"delivery_delay", "instrument_quality", "repair_quality", "billing", "communication", "warranty", "rental"}
+TRANSACTIONS = {"purchase", "repair", "rental", "warranty"}
 
 
 def require(condition, message):
@@ -85,6 +89,52 @@ async def all_pages(client, tool):
         offset = page["next_offset"]
 
 
+async def domain_checks(pc, cc, partners, complaints):
+    require({s for p in partners for s in p["specialties"]} == FAMILIES, "Instrument family coverage differs")
+    require({s for p in partners for s in p["services"]} == SERVICES, "Music partner service coverage differs")
+    require({c["category"] for c in complaints} == CATEGORIES, "Music complaint category coverage differs")
+    require({c["instrument_family"] for c in complaints} == FAMILIES, "Complaint instrument family coverage differs")
+    require({c["transaction_type"] for c in complaints} == TRANSACTIONS, "Complaint transaction coverage differs")
+    seeded = [c for c in complaints if c["id"].startswith("complaint-") and c["id"][10:].isdigit()]
+    require(len({c["product"] for c in seeded}) == 20, "Expected all 20 fictional instrument models")
+    require(all(c["instrument_serial"].startswith("AVI-DEMO-") for c in seeded), "Missing synthetic instrument serial")
+    for category in CATEGORIES:
+        require({c["priority"] for c in seeded if c["category"] == category} == {"low", "normal", "high", "critical"},
+                "Seed categories should support all priority filters")
+    by_id = {p["id"]: p for p in partners}
+    for complaint in seeded:
+        if complaint["assigned_partner_id"]:
+            partner = by_id[complaint["assigned_partner_id"]]
+            required_service = {"purchase": "sales", "repair": "repairs", "rental": "rental", "warranty": "repairs"}[complaint["transaction_type"]]
+            require(partner["status"] == "active" and required_service in partner["services"]
+                    and complaint["instrument_family"] in partner["specialties"],
+                    "Seeded complaint is assigned to an ineligible music partner")
+    for service in sorted(SERVICES):
+        page = await call(pc, "search_partners", {"service": service, "limit": 100})
+        expected = {p["id"] for p in partners if service in p["services"]}
+        require(page["total"] == len(expected) and all(p["id"] in expected for p in page["items"]), "Service filter failed")
+    for family in sorted(FAMILIES):
+        ppage = await call(pc, "search_partners", {"specialty": family, "limit": 100})
+        cpage = await call(cc, "search_complaints", {"instrument_family": family, "limit": 100})
+        require(ppage["total"] == sum(family in p["specialties"] for p in partners)
+                and all(family in p["specialties"] for p in ppage["items"]), "Partner family filter failed")
+        require(cpage["total"] == sum(c["instrument_family"] == family for c in complaints)
+                and all(c["instrument_family"] == family for c in cpage["items"]), "Complaint family filter failed")
+    for category in sorted(CATEGORIES):
+        page = await call(cc, "search_complaints", {"category": category, "limit": 100})
+        require(page["total"] == sum(c["category"] == category for c in complaints)
+                and all(c["category"] == category for c in page["items"]), "Category filter failed")
+    for transaction in sorted(TRANSACTIONS):
+        page = await call(cc, "search_complaints", {"transaction_type": transaction, "limit": 100})
+        require(page["total"] == sum(c["transaction_type"] == transaction for c in complaints)
+                and all(c["transaction_type"] == transaction for c in page["items"]), "Transaction filter failed")
+    serial = seeded[0]["instrument_serial"]
+    page = await call(cc, "search_complaints", {"instrument_serial": serial.lower()})
+    require(page["total"] == 1 and page["items"][0]["id"] == seeded[0]["id"], "Exact serial filter failed")
+    page = await call(cc, "search_complaints", {"query": serial.lower()})
+    require(page["total"] == 1, "Serial text search failed")
+
+
 async def journey(partner_url, complaint_url, key, mode="auto"):
     suffix = uuid4().hex[:12]
     async with mcp_client(partner_url, key, mode) as pc, mcp_client(complaint_url, key, mode) as cc:
@@ -98,23 +148,27 @@ async def journey(partner_url, complaint_url, key, mode="auto"):
         require(len(partners) >= 120, "Fewer than 120 partner seeds")
         require(len(complaints) >= 90, "Fewer than 90 complaint seeds")
         require(len({p["address"]["country_code"] for p in partners}) >= 20, "Insufficient geographic variety")
+        await domain_checks(pc, cc, partners, complaints)
         seed = await call(pc, "get_partner", {"partner_id": "partner-001"})
         payload = {k: v for k, v in seed.items() if k not in {"id", "version", "updated_at"}}
         payload.update(name=f"Integration Test {suffix}", status="active", tier="gold", rating=4.9,
                        capacity_per_week=45, emergency_service=True, languages=["cs", "en"],
-                       specialties=["hvac", "solar"])
+                       specialties=["plucked_strings", "bowed_strings"], services=["sales", "repairs", "rental"])
         new_partner, put_partner, new_complaint = None, None, None
         try:
             new_partner = await call(pc, "create_partner", {"partner": payload})
             pid = new_partner["id"]
             found = await call(pc, "search_partners", {
                 "query": suffix, "country_code": "CZ", "city": "prague", "status": "active",
-                "tier": "gold", "specialty": "solar", "language": "CS", "emergency_service": True,
+                "tier": "gold", "specialty": "plucked_strings", "service": "rental", "language": "CS", "emergency_service": True,
                 "min_rating": 4.8, "min_capacity": 40,
             })
             require([p["id"] for p in found["items"]] == [pid], "Combined partner filters failed")
             negative = await call(pc, "search_partners", {"query": suffix, "country_code": "JP"})
             require(negative["total"] == 0, "AND filter semantics failed")
+            require((await call(pc, "search_partners", {"query": suffix, "service": "restoration"}))["total"] == 0,
+                    "Partner service filter ignored")
+            require((await call(pc, "search_partners", {"query": "rental"}))["total"] > 0, "Service text search failed")
             put_partner = await call(pc, "put_partner", {"partner_id": f"test-{suffix}", "partner": payload})
             payload["capacity_per_week"] = 46
             put_partner = await call(pc, "put_partner", {
@@ -131,6 +185,8 @@ async def journey(partner_url, complaint_url, key, mode="auto"):
             await error(pc, "get_partner", {"partner_id": f"missing-{suffix}"}, "Not found")
             await error(pc, "list_partners", {"limit": 101})
             await error(pc, "search_partners", {"min_rating": 6})
+            await error(pc, "search_partners", {"specialty": "hvac"})
+            await error(pc, "search_partners", {"service": "installation"})
             bad = dict(payload, rating=9)
             await error(pc, "create_partner", {"partner": bad})
 
@@ -138,16 +194,20 @@ async def journey(partner_url, complaint_url, key, mode="auto"):
             new_complaint = await call(cc, "create_complaint", {"complaint": {
                 "customer": {"name": "Synthetic Test Customer", "email": f"{suffix}@customers.example",
                              "country_code": "CZ", "preferred_language": "cs"},
-                "subject": f"Test service case {suffix}", "description": "Synthetic repair-quality issue",
+                "subject": f"Test instrument repair case {suffix}", "description": "Electric guitar output jack is still intermittent after repair.",
                 "category": "repair_quality", "priority": "high", "channel": "web",
-                "product": "Heat pump", "order_reference": f"TEST-{suffix}",
+                "product": "EG-300 Switchrail solid-body electric guitar", "instrument_family": "plucked_strings",
+                "instrument_serial": f"AVI-TEST-{suffix}", "transaction_type": "repair", "order_reference": f"TEST-{suffix}",
             }})
             cid = new_complaint["id"]
             require((await call(cc, "get_complaint", {"complaint_id": cid}))["status"] == "new", "New state failed")
             new_complaint = await call(cc, "update_complaint", {
-                "complaint_id": cid, "patch": {"priority": "critical", "assigned_agent": "Demo Agent"},
+                "complaint_id": cid, "patch": {"priority": "critical", "assigned_agent": "Demo Agent",
+                                              "instrument_serial": f"AVI-UPDATED-{suffix}",
+                                              "instrument_family": "plucked_strings", "transaction_type": "repair"},
                 "expected_version": new_complaint["version"],
             })
+            require(new_complaint["instrument_serial"] == f"AVI-UPDATED-{suffix}", "Instrument serial update failed")
             new_complaint = await call(cc, "assign_complaint", {
                 "complaint_id": cid, "partner_id": pid, "agent": "Demo Agent",
                 "expected_version": new_complaint["version"],
@@ -160,10 +220,21 @@ async def journey(partner_url, complaint_url, key, mode="auto"):
             found = await call(cc, "search_complaints", {
                 "query": suffix, "status": "new", "priority": "critical", "category": "repair_quality",
                 "country_code": "CZ", "partner_id": pid, "customer_email": f"{suffix}@customers.example",
+                "instrument_family": "plucked_strings", "transaction_type": "repair",
+                "instrument_serial": f"avi-updated-{suffix}",
             })
             require([c["id"] for c in found["items"]] == [cid], "Combined complaint search failed")
+            require((await call(cc, "search_complaints", {"query": suffix, "transaction_type": "rental"}))["total"] == 0,
+                    "Transaction AND filter ignored")
+            require((await call(cc, "search_complaints", {"query": suffix, "instrument_family": "brass"}))["total"] == 0,
+                    "Instrument family AND filter ignored")
+            require((await call(cc, "search_complaints", {"instrument_serial": f"missing-{suffix}"}))["total"] == 0,
+                    "Serial filter returned unrelated records")
             stats = await call(cc, "complaint_statistics")
             require(stats["total"] == base_stats["total"] + 1, "Statistics total failed")
+            require(stats["by_instrument_family"]["plucked_strings"] == base_stats["by_instrument_family"]["plucked_strings"] + 1
+                    and stats["by_transaction_type"]["repair"] == base_stats["by_transaction_type"]["repair"] + 1,
+                    "Music-domain statistics failed")
             overdue = await call(cc, "search_complaints", {"overdue_only": True, "limit": 100})
             require(all(c["status"] not in {"resolved", "closed"} for c in overdue["items"]), "Overdue includes closed cases")
             await error(cc, "transition_complaint", {
@@ -186,6 +257,8 @@ async def journey(partner_url, complaint_url, key, mode="auto"):
                                                 "expected_version": new_complaint["version"]}, "Reopen")
             await error(cc, "get_complaint", {"complaint_id": f"missing-{suffix}"}, "Not found")
             await error(cc, "list_complaints", {"offset": -1})
+            await error(cc, "search_complaints", {"category": "late_arrival"})
+            await error(cc, "search_complaints", {"transaction_type": "installation"})
             await error(cc, "delete_complaint", {"complaint_id": cid, "expected_version": 1}, "Version conflict")
         finally:
             # Refresh versions so a failed assertion does not leave successful writes behind.
@@ -201,7 +274,7 @@ async def journey(partner_url, complaint_url, key, mode="auto"):
                     await error(client, get, {field: row["id"]}, "Not found")
         require((await call(pc, "list_partners"))["total"] == len(partners), "Partner cleanup count mismatch")
         require((await call(cc, "list_complaints"))["total"] == len(complaints), "Complaint cleanup count mismatch")
-    print(f"PASS ({mode}): 6 partner tools + 10 complaint tools; pagination, filters, CRUD, lifecycle, errors, cleanup")
+    print(f"PASS ({mode}): 6 partner tools + 10 complaint tools; music-domain data, all service/family/category/transaction/serial filters, CRUD, lifecycle, errors, cleanup")
 
 
 async def verify(partner_url, complaint_url, key):

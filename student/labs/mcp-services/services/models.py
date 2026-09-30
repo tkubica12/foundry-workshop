@@ -8,7 +8,10 @@ Description = Annotated[str, Field(min_length=1, max_length=4000)]
 Identifier = Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")]
 Status = Literal["new", "triaged", "in_progress", "awaiting_customer", "resolved", "closed"]
 Priority = Literal["low", "normal", "high", "critical"]
-Category = Literal["late_arrival", "repair_quality", "billing", "communication", "warranty", "safety"]
+Specialty = Literal["plucked_strings", "bowed_strings", "keyboards", "woodwinds", "brass", "percussion"]
+PartnerService = Literal["sales", "repairs", "rental", "maintenance", "setup", "tuning", "restoration"]
+TransactionType = Literal["purchase", "repair", "rental", "warranty"]
+Category = Literal["delivery_delay", "instrument_quality", "repair_quality", "billing", "communication", "warranty", "rental"]
 
 
 class Model(BaseModel):
@@ -34,7 +37,8 @@ class PartnerInput(Model):
     website: Annotated[str, Field(pattern=r"^https://", max_length=300)]
     status: Literal["active", "suspended", "pending"] = "active"
     tier: Literal["standard", "silver", "gold", "platinum"] = "standard"
-    specialties: Annotated[list[Literal["hvac", "appliances", "solar", "electrical", "plumbing"]], Field(min_length=1, max_length=5)]
+    specialties: Annotated[list[Specialty], Field(min_length=1, max_length=6)]
+    services: Annotated[list[PartnerService], Field(min_length=1, max_length=7)] = ["sales", "repairs"]
     languages: Annotated[list[Text], Field(min_length=1, max_length=10)]
     certifications: Annotated[list[Text], Field(max_length=10)] = []
     service_radius_km: Annotated[int, Field(ge=1, le=1000)] = 50
@@ -65,6 +69,9 @@ class ComplaintInput(Model):
     priority: Priority = "normal"
     channel: Literal["email", "phone", "web", "chat"] = "web"
     product: Text
+    instrument_family: Specialty = "plucked_strings"
+    instrument_serial: Text | None = None
+    transaction_type: TransactionType = "purchase"
     order_reference: Text
 
 
@@ -101,3 +108,6 @@ class ComplaintPatch(Model):
     subject: Text | None = None
     description: Description | None = None
     assigned_agent: Text | None = None
+    instrument_family: Specialty | None = None
+    instrument_serial: Text | None = None
+    transaction_type: TransactionType | None = None
