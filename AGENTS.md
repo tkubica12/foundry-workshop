@@ -51,16 +51,26 @@ docs/
   assets/
   adr/
 templates/
+data/
+  instruments/
+evals/
+  grounding/
 ```
 
 - `teacher/demos/`: Self-contained demo source, infrastructure, automation, tests, and operator notes.
 - `student/labs/`: Exercise source, starter state, solution state where appropriate, automation, and tests.
 - `docs/`: Attendee-facing HTML slides, guides, shared assets, and ADRs.
 - `templates/`: Reusable authoring templates.
+- `data/`: Shared synthetic input corpora, independent of teacher/student roles.
+- `evals/`: Reference questions, answers and evidence for evaluation; never ingest these into the knowledge source.
 - Root `README.md`: Quick navigation only.
 - Root `AGENTS.md`: Repository-wide implementation rules.
 
 Keep attendee-facing guides in `docs/`. Link them to the corresponding code under `student/labs/` or `teacher/demos/`.
+
+Synthetic PDF ingestion corpora are data, not attendee guides. Keep their PDFs,
+editorial data and generators in `data/`; generated print HTML is an ignored
+intermediate, not a published catalogue or committed source deliverable.
 
 ## Attendee-facing content
 

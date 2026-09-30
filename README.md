@@ -11,6 +11,7 @@ qualified delivery package; only Labs 2 and 3 are currently published.
 - [Lab 2: Build an agent](docs/guides/chapter-2-build-agent.html)
 - [Lab 3: Evaluate and improve](docs/guides/chapter-3-evaluate-agent.html)
 - [Workshop sequence](AGENDA.md)
+- [Synthetic instrument PDF corpus](data/instruments/) · [Grounding eval dataset](evals/grounding/)
 
 ## Delivery and maintenance
 

@@ -1,0 +1,806 @@
+{
+  "synthetic": true,
+  "ingest": false,
+  "questions": [
+    {
+      "document": "acoustic-guitar.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the steel-string acoustic guitar made and when was its first Aster Vale model introduced?",
+      "answer": "Alder Works, line S1; 1962."
+    },
+    {
+      "document": "acoustic-guitar.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 700; 11 hours."
+    },
+    {
+      "document": "acoustic-guitar.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "502"
+    },
+    {
+      "document": "acoustic-guitar.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Tuning machines",
+        "Fingerboard",
+        "Soundhole",
+        "Bridge"
+      ]
+    },
+    {
+      "document": "acoustic-guitar.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "electric-guitar.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the solid-body electric guitar made and when was its first Aster Vale model introduced?",
+      "answer": "Alder Works, line S2; 1971."
+    },
+    {
+      "document": "electric-guitar.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 800; 9 hours."
+    },
+    {
+      "document": "electric-guitar.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "442"
+    },
+    {
+      "document": "electric-guitar.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Tuning machines",
+        "Fingerboard",
+        "Neck pickup",
+        "Fixed bridge"
+      ]
+    },
+    {
+      "document": "electric-guitar.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "electric-bass.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the four-string electric bass made and when was its first Aster Vale model introduced?",
+      "answer": "Alder Works, line S2; 1974."
+    },
+    {
+      "document": "electric-bass.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 740; 9 hours."
+    },
+    {
+      "document": "electric-bass.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "312"
+    },
+    {
+      "document": "electric-bass.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Tuning machines",
+        "Long-scale neck",
+        "Split-coil pickup",
+        "Bridge saddles"
+      ]
+    },
+    {
+      "document": "electric-bass.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "violin.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the violin made and when was its first Aster Vale model introduced?",
+      "answer": "Alder Works, line S3; 1959."
+    },
+    {
+      "document": "violin.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 1600; 23 hours."
+    },
+    {
+      "document": "violin.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "250"
+    },
+    {
+      "document": "violin.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Scroll and pegs",
+        "Fingerboard",
+        "Bridge",
+        "Tailpiece"
+      ]
+    },
+    {
+      "document": "violin.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "viola.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the viola made and when was its first Aster Vale model introduced?",
+      "answer": "Alder Works, line S3; 1965."
+    },
+    {
+      "document": "viola.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 1800; 24 hours."
+    },
+    {
+      "document": "viola.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "148"
+    },
+    {
+      "document": "viola.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Scroll",
+        "Fingerboard",
+        "Bridge",
+        "Tailpiece"
+      ]
+    },
+    {
+      "document": "viola.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "cello.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the cello made and when was its first Aster Vale model introduced?",
+      "answer": "Alder Works, line S4; 1968."
+    },
+    {
+      "document": "cello.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 3400; 34 hours."
+    },
+    {
+      "document": "cello.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "119"
+    },
+    {
+      "document": "cello.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Scroll",
+        "Fingerboard",
+        "Bridge",
+        "Endpin"
+      ]
+    },
+    {
+      "document": "cello.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "double-bass.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the double bass made and when was its first Aster Vale model introduced?",
+      "answer": "Alder Works, line S4; 1970."
+    },
+    {
+      "document": "double-bass.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 3600; 35 hours."
+    },
+    {
+      "document": "double-bass.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "79"
+    },
+    {
+      "document": "double-bass.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Tuning mechanism",
+        "Fingerboard",
+        "Bridge",
+        "Endpin"
+      ]
+    },
+    {
+      "document": "double-bass.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "grand-piano.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the grand piano made and when was its first Aster Vale model introduced?",
+      "answer": "Stonebridge Works, line K1; 1981."
+    },
+    {
+      "document": "grand-piano.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 19000; 80 hours."
+    },
+    {
+      "document": "grand-piano.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "31"
+    },
+    {
+      "document": "grand-piano.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Raised lid",
+        "Strings and plate",
+        "Keyboard",
+        "Pedal lyre"
+      ]
+    },
+    {
+      "document": "grand-piano.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "upright-piano.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the upright piano made and when was its first Aster Vale model introduced?",
+      "answer": "Stonebridge Works, line K2; 1978."
+    },
+    {
+      "document": "upright-piano.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 3600; 30 hours."
+    },
+    {
+      "document": "upright-piano.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "173"
+    },
+    {
+      "document": "upright-piano.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Upper service panel",
+        "Keyboard",
+        "Lower panel",
+        "Pedals"
+      ]
+    },
+    {
+      "document": "upright-piano.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "concert-harp.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the concert pedal harp made and when was its first Aster Vale model introduced?",
+      "answer": "Alder Works, line S5; 1987."
+    },
+    {
+      "document": "concert-harp.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 10000; 55 hours."
+    },
+    {
+      "document": "concert-harp.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "24"
+    },
+    {
+      "document": "concert-harp.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Curved neck",
+        "Column",
+        "Soundboard",
+        "Pedals"
+      ]
+    },
+    {
+      "document": "concert-harp.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "flute.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the concert flute made and when was its first Aster Vale model introduced?",
+      "answer": "Reedbank Works, line W1; 1983."
+    },
+    {
+      "document": "flute.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 1150; 13 hours."
+    },
+    {
+      "document": "flute.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "266"
+    },
+    {
+      "document": "flute.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Embouchure hole",
+        "Headjoint",
+        "Keywork",
+        "Footjoint"
+      ]
+    },
+    {
+      "document": "flute.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "clarinet.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the b-flat clarinet made and when was its first Aster Vale model introduced?",
+      "answer": "Reedbank Works, line W2; 1980."
+    },
+    {
+      "document": "clarinet.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 1300; 15 hours."
+    },
+    {
+      "document": "clarinet.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "291"
+    },
+    {
+      "document": "clarinet.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Mouthpiece",
+        "Barrel",
+        "Upper-joint keys",
+        "Bell"
+      ]
+    },
+    {
+      "document": "clarinet.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "oboe.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the oboe made and when was its first Aster Vale model introduced?",
+      "answer": "Reedbank Works, line W3; 1989."
+    },
+    {
+      "document": "oboe.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 2200; 24 hours."
+    },
+    {
+      "document": "oboe.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "84"
+    },
+    {
+      "document": "oboe.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Double reed",
+        "Upper keywork",
+        "Main keywork",
+        "Bell"
+      ]
+    },
+    {
+      "document": "oboe.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "bassoon.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the bassoon made and when was its first Aster Vale model introduced?",
+      "answer": "Reedbank Works, line W4; 1991."
+    },
+    {
+      "document": "bassoon.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 4700; 43 hours."
+    },
+    {
+      "document": "bassoon.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "43"
+    },
+    {
+      "document": "bassoon.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Bell",
+        "Bocal",
+        "Long joint",
+        "Boot joint"
+      ]
+    },
+    {
+      "document": "bassoon.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "alto-saxophone.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the e-flat alto saxophone made and when was its first Aster Vale model introduced?",
+      "answer": "Reedbank Works, line W5; 1985."
+    },
+    {
+      "document": "alto-saxophone.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 1500; 17 hours."
+    },
+    {
+      "document": "alto-saxophone.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "216"
+    },
+    {
+      "document": "alto-saxophone.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Mouthpiece",
+        "Neck",
+        "Key stacks",
+        "Bell"
+      ]
+    },
+    {
+      "document": "alto-saxophone.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "trumpet.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the b-flat trumpet made and when was its first Aster Vale model introduced?",
+      "answer": "Bellmere Works, line B1; 1976."
+    },
+    {
+      "document": "trumpet.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 1150; 14 hours."
+    },
+    {
+      "document": "trumpet.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "342"
+    },
+    {
+      "document": "trumpet.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Mouthpiece",
+        "Piston valves",
+        "Tuning slide",
+        "Bell"
+      ]
+    },
+    {
+      "document": "trumpet.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "french-horn.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the f/b-flat double horn made and when was its first Aster Vale model introduced?",
+      "answer": "Bellmere Works, line B2; 1988."
+    },
+    {
+      "document": "french-horn.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 2500; 25 hours."
+    },
+    {
+      "document": "french-horn.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "91"
+    },
+    {
+      "document": "french-horn.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Mouthpiece",
+        "Rotary valves",
+        "Coiled tubing",
+        "Bell"
+      ]
+    },
+    {
+      "document": "french-horn.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "trombone.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the tenor trombone with f attachment made and when was its first Aster Vale model introduced?",
+      "answer": "Bellmere Works, line B3; 1979."
+    },
+    {
+      "document": "trombone.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 1600; 17 hours."
+    },
+    {
+      "document": "trombone.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "161"
+    },
+    {
+      "document": "trombone.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Hand slide",
+        "Slide brace",
+        "F attachment",
+        "Bell"
+      ]
+    },
+    {
+      "document": "trombone.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "timpani.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the pedal timpani made and when was its first Aster Vale model introduced?",
+      "answer": "Stonebridge Works, line P1; 1994."
+    },
+    {
+      "document": "timpani.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 2500; 22 hours."
+    },
+    {
+      "document": "timpani.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "55"
+    },
+    {
+      "document": "timpani.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Membrane",
+        "Tension rim",
+        "Copper bowl",
+        "Pedal"
+      ]
+    },
+    {
+      "document": "timpani.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    },
+    {
+      "document": "snare-drum.pdf",
+      "page": 2,
+      "type": "prose",
+      "question": "Where is the concert snare drum made and when was its first Aster Vale model introduced?",
+      "answer": "Stonebridge Works, line P2; 1990."
+    },
+    {
+      "document": "snare-drum.pdf",
+      "page": 8,
+      "type": "table",
+      "question": "How much more does Atelier cost than Foundation, and how many additional bench hours does it receive?",
+      "answer": "EUR 500; 7 hours."
+    },
+    {
+      "document": "snare-drum.pdf",
+      "page": 8,
+      "type": "image-only-chart",
+      "question": "Read the annual-shipment chart: how many units were dispatched in 2022?",
+      "answer": "378"
+    },
+    {
+      "document": "snare-drum.pdf",
+      "page": 7,
+      "type": "annotated-image",
+      "question": "Which four external parts are labelled in the anatomy illustration?",
+      "answer": [
+        "Batter head",
+        "Tension hoop",
+        "Maple shell",
+        "Throw-off"
+      ]
+    },
+    {
+      "document": "snare-drum.pdf",
+      "page": 9,
+      "type": "diagram",
+      "question": "What is the failure branch of the acceptance decision?",
+      "answer": "Hold the instrument, rework the affected operation and repeat downstream checks before release."
+    }
+  ]
+}

@@ -1,0 +1,407 @@
+{
+  "company": "Aster Vale Instruments",
+  "edition": "2026-09",
+  "synthetic": true,
+  "documents": [
+    {
+      "slug": "acoustic-guitar",
+      "pages": 9,
+      "words_per_page": [
+        109,
+        558,
+        470,
+        536,
+        493,
+        489,
+        137,
+        170,
+        188
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "c8cb711301aaa74faa766c4109d9dc197df1c297e7f0daebcf8eb51e56bb2c46"
+    },
+    {
+      "slug": "electric-guitar",
+      "pages": 9,
+      "words_per_page": [
+        109,
+        556,
+        465,
+        526,
+        486,
+        485,
+        138,
+        170,
+        187
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "88a1af86bf4f98ea7860413235134ea15af25911cc7d616c456e01fe00e1e75c"
+    },
+    {
+      "slug": "electric-bass",
+      "pages": 9,
+      "words_per_page": [
+        109,
+        551,
+        471,
+        537,
+        482,
+        491,
+        146,
+        170,
+        183
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "76a3c18fc8d25889610de4768d51e535f4ed0cf59ed0f537f878c2460182b00a"
+    },
+    {
+      "slug": "violin",
+      "pages": 9,
+      "words_per_page": [
+        107,
+        540,
+        466,
+        540,
+        487,
+        493,
+        146,
+        171,
+        192
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "4c44797bdfb9e00afb1686fc23d2dacb4fd34f820c64d786ec10b5ae14a498d9"
+    },
+    {
+      "slug": "viola",
+      "pages": 9,
+      "words_per_page": [
+        107,
+        564,
+        465,
+        534,
+        489,
+        488,
+        142,
+        171,
+        185
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "21047eb0bd8fb8401d2c57340fa9e2428c436fb4e92d904970bc70c0b1783fb5"
+    },
+    {
+      "slug": "cello",
+      "pages": 9,
+      "words_per_page": [
+        107,
+        550,
+        474,
+        534,
+        485,
+        493,
+        140,
+        171,
+        187
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "f90d34bcdd8a239e28f72dc231e4fbdba42e199416072c70e45ff5025bd7739d"
+    },
+    {
+      "slug": "double-bass",
+      "pages": 9,
+      "words_per_page": [
+        108,
+        555,
+        468,
+        523,
+        485,
+        489,
+        139,
+        171,
+        186
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "644f670a1868169af941731b49cf10991f4fa2089d0c8afe95af349c8c059a6d"
+    },
+    {
+      "slug": "grand-piano",
+      "pages": 9,
+      "words_per_page": [
+        107,
+        555,
+        468,
+        517,
+        481,
+        488,
+        139,
+        171,
+        186
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "8e544a9407090e03ff9d5280aefa0d26bd31fdc39c92c9d369f3331b1b794eb6"
+    },
+    {
+      "slug": "upright-piano",
+      "pages": 9,
+      "words_per_page": [
+        107,
+        548,
+        469,
+        525,
+        479,
+        488,
+        141,
+        171,
+        186
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "5d95e1a03443aa4468a8aab6ba18ca26fee8fb57b8bcf027c7a69edbfd030c8b"
+    },
+    {
+      "slug": "concert-harp",
+      "pages": 9,
+      "words_per_page": [
+        109,
+        543,
+        467,
+        520,
+        477,
+        489,
+        132,
+        171,
+        184
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "0664e7c1ce1111d3bc9e7d47a22ee9313ad3365745aaf440e7d7adef1cb23d57"
+    },
+    {
+      "slug": "flute",
+      "pages": 9,
+      "words_per_page": [
+        107,
+        549,
+        464,
+        515,
+        489,
+        486,
+        140,
+        170,
+        184
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "1f3059558baae7e15f5666557f10bb58fb6cd7856916a04984c04cbe8acbeb6a"
+    },
+    {
+      "slug": "clarinet",
+      "pages": 9,
+      "words_per_page": [
+        107,
+        550,
+        468,
+        517,
+        473,
+        483,
+        130,
+        171,
+        178
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "7a21f7e995d9978034d440c04df2659713a04ea4926e262178eaaa68833e9569"
+    },
+    {
+      "slug": "oboe",
+      "pages": 9,
+      "words_per_page": [
+        106,
+        541,
+        467,
+        521,
+        476,
+        486,
+        134,
+        171,
+        186
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "b18194b345e4ce71a0c2afd943ed023028037b74994f6b8f5ac2b4f00f488c53"
+    },
+    {
+      "slug": "bassoon",
+      "pages": 9,
+      "words_per_page": [
+        106,
+        553,
+        469,
+        523,
+        487,
+        484,
+        138,
+        171,
+        184
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "e0d6d6c8014b2a18af0fba8a97cb5b818ae07e84b10244459298469dea7e46ef"
+    },
+    {
+      "slug": "alto-saxophone",
+      "pages": 9,
+      "words_per_page": [
+        108,
+        546,
+        469,
+        522,
+        482,
+        491,
+        142,
+        171,
+        193
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "b776113144d8db1e4fa574b2d138af1fae57bf3be20bcb1aeefeb476716bb3d4"
+    },
+    {
+      "slug": "trumpet",
+      "pages": 9,
+      "words_per_page": [
+        107,
+        545,
+        467,
+        513,
+        480,
+        484,
+        129,
+        171,
+        185
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "5771288102957df7758e397375646816529017ecbf8e9f60b571e403059d18b2"
+    },
+    {
+      "slug": "french-horn",
+      "pages": 9,
+      "words_per_page": [
+        109,
+        548,
+        464,
+        524,
+        484,
+        490,
+        142,
+        171,
+        186
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "a03de4ea77f128d25a85b316ba7d3e6b820e6d4833ed3310779a016e51b910bf"
+    },
+    {
+      "slug": "trombone",
+      "pages": 9,
+      "words_per_page": [
+        110,
+        550,
+        473,
+        515,
+        486,
+        500,
+        144,
+        171,
+        189
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "57576c4680fa362c4e990e8327afa009a588757982d8aee7103ac1eb8b026154"
+    },
+    {
+      "slug": "timpani",
+      "pages": 9,
+      "words_per_page": [
+        107,
+        545,
+        464,
+        518,
+        479,
+        486,
+        136,
+        171,
+        188
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "4cd036b03115ce66b9d95bd22bbe994469f366def43c6d77e29aae4994f0cc01"
+    },
+    {
+      "slug": "snare-drum",
+      "pages": 9,
+      "words_per_page": [
+        108,
+        553,
+        470,
+        524,
+        481,
+        494,
+        145,
+        170,
+        183
+      ],
+      "text_only_pages": 5,
+      "instrument_images": 2,
+      "raster_charts": 1,
+      "tables": 1,
+      "sha256": "6de529a726ed50a6ebbb10f073da6dee50e4aafd7e818e599c6c3378273ecdc8"
+    }
+  ]
+}
