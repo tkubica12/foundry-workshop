@@ -1,0 +1,85 @@
+/* Lab-only reading components. Canonical article and slide layout stays shared. */
+.lab-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem 2rem;
+  padding: 0;
+  list-style: none;
+  color: var(--text-muted);
+  font-size: .875rem;
+}
+.lab-meta li { max-width: 32rem; }
+.lab-meta strong { display: block; color: var(--text); }
+.section-label { color: var(--text-muted); font-size: .85rem; }
+.table-wrap { max-width: 100%; overflow-x: auto; }
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.table-wrap th, .table-wrap td {
+  padding: .8rem 1rem;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.table-wrap th { background: var(--surface-2); font-weight: 650; }
+.checkpoint {
+  margin: 1.25rem 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+}
+.checkpoint__label, .lab-example-label { display: block; font-weight: 650; }
+.checkpoint p:last-child { margin-bottom: 0; }
+.lab-example { margin: 1.25rem 0; padding-block: .25rem; }
+.lab-example + .lab-example { border-top: 1px solid var(--border); padding-top: 1rem; }
+.lab-button {
+  min-height: 2.5rem;
+  padding: .5rem .9rem;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  cursor: pointer;
+}
+.lab-button:hover { border-color: var(--accent); background: var(--accent-soft); }
+.lab-button:focus-visible, .field :is(input, textarea, select):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+.lab-copy-row { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin: .75rem 1rem; }
+.lab-copy-status { color: var(--text-muted); font-size: .85rem; }
+.lab-copy-status[data-kind="error"] { color: var(--text); font-weight: 650; }
+.passport-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1rem; }
+.field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-block: 1rem; }
+.field { display: grid; min-width: 0; gap: .4rem; align-content: start; }
+.field--wide { grid-column: 1 / -1; }
+.field label, .field-label { font-weight: 650; }
+.field small { color: var(--text-muted); }
+.field :is(input, textarea, select) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: .65rem .75rem;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font: inherit;
+}
+.field textarea { min-height: 6.5rem; resize: vertical; }
+.field input[readonly] { background: var(--surface-2); font-family: var(--font-mono); font-size: .8rem; }
+.evidence-group { min-width: 0; margin: 1.25rem 0; padding: 1rem; border: 1px solid var(--border-strong); border-radius: var(--radius); }
+.evidence-group legend { padding: 0 .45rem; font-weight: 650; }
+.status { margin: 1rem 0; padding: .8rem 1rem; border-left: 4px solid var(--accent); background: var(--accent-soft); }
+.status[data-kind="error"], .status[data-kind="warning"], .decision-status { font-weight: 650; }
+.noscript-note { padding: 1rem; border: 2px solid var(--accent); }
+html:not(.js) :is(.passport-actions, .lab-copy-row) { display: none; }
+@media (max-width: 720px) {
+  .field-grid { grid-template-columns: 1fr; }
+  .field--wide { grid-column: auto; }
+  .table-wrap th, .table-wrap td { padding: .6rem; overflow-wrap: anywhere; }
+}
+@media print {
+  .passport-actions, .lab-copy-row { display: none !important; }
+  .field :is(input, textarea, select) { border-color: var(--border); }
+}

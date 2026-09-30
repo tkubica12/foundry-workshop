@@ -1,0 +1,18 @@
+{
+  "source_id": "stock-exception-policy-v2",
+  "title": "Synthetic stock exception policy v2",
+  "document_type": "operations_policy",
+  "owner": "Synthetic Retail Operations",
+  "effective_from": "2026-07-01",
+  "effective_to": null,
+  "status": "current",
+  "supersedes": "stock-exception-policy-v1",
+  "approval_reference": "SYN-OPS-2026-07",
+  "content": [
+    "This fictional policy exists only for the Microsoft Foundry one-day workshop.",
+    "Escalate a shortfall of 8 units or more to the regional stock desk.",
+    "Include the store code, available quantity, demand, shortfall, and next scheduled delivery.",
+    "Do not claim that escalation has occurred unless an inspected system record proves it.",
+    "Never release reserved units or make clinical, substitution, or dosing recommendations."
+  ]
+}

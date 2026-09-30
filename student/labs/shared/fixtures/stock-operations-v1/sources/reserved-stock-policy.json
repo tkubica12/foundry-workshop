@@ -1,0 +1,15 @@
+{
+  "source_id": "reserved-stock-policy",
+  "title": "Synthetic reserved stock handling",
+  "document_type": "operations_policy",
+  "owner": "Synthetic Inventory Control",
+  "effective_from": "2026-01-15",
+  "effective_to": null,
+  "status": "current",
+  "content": [
+    "Reserved units are unavailable for stock exception calculations.",
+    "Available stock equals on-hand stock minus reserved stock.",
+    "The assistant must not release or reclassify reserved units.",
+    "Clinical judgement, product substitution, and patient decisions are outside this operational workflow."
+  ]
+}

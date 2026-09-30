@@ -1,0 +1,221 @@
+<!doctype html>
+<!--
+MIT License
+
+Copyright (c) 2026 Tomáš Kubica
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<html lang="en" data-default-accent="blue">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keep a reproducible learning record - workshop guide template</title>
+<meta name="description" content="A local authoring example: record an observation, inspect the evidence and decide what remains unproven.">
+<meta name="doc-id" content="foundry-lab-template">
+<script data-doc-bootstrap>
+/* Inline in the head before styles with sync-head.js. No deferred bootstrap. */
+(() => {
+  "use strict";
+  const root = document.documentElement;
+  const params = new URLSearchParams(location.search);
+  const id = document.querySelector('meta[name="doc-id"]')?.content ||
+    location.pathname.replace(/\.standalone(?=\.html$)/i, "");
+  const prefix = "html-docs:" + id + ":";
+  const choices = { theme: ["light", "dark"], accent: ["blue", "orange", "green"] };
+  const read = (name) => {
+    try { return localStorage.getItem(prefix + name); }
+    catch { return null; /* Storage may be unavailable for local files. */ }
+  };
+  const write = (name, value) => {
+    try { localStorage.setItem(prefix + name, value); }
+    catch { /* The current view still works without persistence. */ }
+  };
+  function refresh() {
+    for (const name of Object.keys(choices)) {
+      const current = root.getAttribute("data-" + name);
+      const next = choices[name][(choices[name].indexOf(current) + 1) % choices[name].length];
+      document.querySelectorAll('[data-action="toggle-' + name + '"]').forEach(button => {
+        button.textContent = name === "theme" ? (next === "dark" ? "Dark" : "Light") :
+          "Accent: " + current[0].toUpperCase() + current.slice(1);
+        button.setAttribute("aria-label", name === "theme" ? "Switch to " + next + " theme" :
+          "Accent: " + current + ". Switch to " + next);
+      });
+    }
+  }
+  for (const [name, values] of Object.entries(choices)) {
+    const fallback = name === "theme" && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : values[0];
+    const value = [params.get(name), read(name), root.getAttribute("data-default-" + name), fallback]
+      .find(candidate => values.includes(candidate));
+    root.setAttribute("data-" + name, value);
+  }
+  root.classList.add("js");
+  if (params.get("view") === "slides") root.setAttribute("data-view", "slides");
+  window.HtmlDocs = { read, write, refresh };
+  document.addEventListener("DOMContentLoaded", refresh);
+  document.addEventListener("click", event => {
+    const button = event.target.closest('[data-action="toggle-theme"], [data-action="toggle-accent"]');
+    if (!button) return;
+    const name = button.getAttribute("data-action").slice(7);
+    const values = choices[name];
+    const next = values[(values.indexOf(root.getAttribute("data-" + name)) + 1) % values.length];
+    root.setAttribute("data-" + name, next);
+    write(name, next);
+    // Replace a URL override too, so reloading preserves a deliberate change.
+    const url = new URL(location.href);
+    if (url.searchParams.has(name)) {
+      url.searchParams.set(name, next);
+      history.replaceState(null, "", url.href);
+    }
+    refresh();
+  });
+})();
+</script>
+<style data-doc-tokens>
+/* Canonical tokens. Inline with sync-head.js; one accent family at a time. */
+:root {
+  color-scheme: light;
+  --bg: #fafafa; --surface: #ffffff; --surface-2: #f2f2f2; --surface-3: #e8e8e8;
+  --border: #dedede; --border-strong: #b8b8b8;
+  --text: #161616; --text-muted: #565656; --text-faint: #686868;
+  --accent-light: #0068bd; --accent-dark: #69b8ff;
+  --accent: var(--accent-light);
+  --accent-strong: var(--accent);
+  --accent-quiet: var(--accent);
+  --accent-soft: color-mix(in srgb, var(--accent) 9%, var(--bg));
+  --accent-border: color-mix(in srgb, var(--accent) 36%, var(--bg));
+  --warn: var(--accent); --warn-soft: var(--accent-soft); --warn-border: var(--accent-border);
+  --code-bg: var(--surface-2); --code-border: var(--border);
+  --focus: var(--accent);
+  --shadow-1: 0 1px 2px rgba(0,0,0,.04);
+  --shadow-2: 0 2px 4px rgba(0,0,0,.04), 0 12px 28px rgba(0,0,0,.06);
+  --radius: 10px; --radius-sm: 6px; --canvas: 1160px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Cascadia Mono", "Cascadia Code", ui-monospace, Consolas, "SF Mono", "Liberation Mono", Menlo, monospace;
+}
+[data-theme="dark"], :root:not([data-theme])[data-default-theme="dark"] {
+  color-scheme: dark;
+  --bg: #101010; --surface: #191919; --surface-2: #232323; --surface-3: #2c2c2c;
+  --border: #363636; --border-strong: #595959;
+  --text: #f2f2f2; --text-muted: #b5b5b5; --text-faint: #a0a0a0;
+  --accent: var(--accent-dark);
+  --shadow-1: 0 1px 2px rgba(0,0,0,.3);
+  --shadow-2: 0 2px 4px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.4);
+}
+[data-accent="orange"], :root:not([data-accent])[data-default-accent="orange"] {
+  --accent-light: #a94000; --accent-dark: #ffae72;
+}
+[data-accent="green"], :root:not([data-accent])[data-default-accent="green"] {
+  --accent-light: #137344; --accent-dark: #6cd6a0;
+}
+</style>
+<link rel="stylesheet" href="../assets/html-docs/article.css">
+<link rel="stylesheet" href="../assets/html-docs/slides.css">
+<link rel="stylesheet" href="../assets/document-navigation.css">
+<script src="../assets/html-docs/article.js" defer></script>
+<script src="../assets/html-docs/slides.js" defer></script>
+</head>
+<body>
+<!-- Copy to docs/guides/<guide-name>.html. Give the copy its own doc-id. -->
+<a class="skip-link" href="#content">Skip to the exercise</a>
+<div class="controls" role="group" aria-label="Article controls">
+  <button type="button" class="ctrl" data-action="expand-all">Expand all</button>
+  <button type="button" class="ctrl" data-action="collapse-all">Collapse all</button>
+  <button type="button" class="ctrl" data-action="toggle-slides" aria-pressed="false">Slides</button>
+  <button type="button" class="ctrl" data-action="toggle-theme">Dark</button>
+  <button type="button" class="ctrl" data-action="toggle-accent">Accent: Blue</button>
+</div>
+<div class="doc">
+  <header class="doc-header" id="opening">
+    <div class="slide-content slide-content--title">
+      <h2 class="slide-title">Keep a record.<br><em>Know its limits.</em></h2>
+    </div>
+    <p class="eyebrow">Local exercise / Authoring example</p>
+    <h1>Keep a reproducible learning record</h1>
+    <p class="subtitle">Record one observation, the evidence supporting it and the
+      next check that would reduce uncertainty. Use a modern browser and a local
+      text editor; no account, cloud resource or installation is required.</p>
+  </header>
+  <main id="content">
+    <section class="chapter" id="ch-observe">
+      <h2 class="chapter-label">Preparation / Identify the observation</h2>
+      <article class="card card--lead" id="card-observation" data-open>
+        <div class="slide-content"><h2 class="slide-title">Start with<br><em>what you actually saw.</em></h2></div>
+        <h3 class="card-head"><button class="card-toggle" type="button" aria-expanded="true">
+          <span class="card-num" aria-hidden="true"></span><span class="card-titles">
+          <span class="card-title">An observation is narrower than a conclusion</span></span><span class="card-mark" aria-hidden="true"></span>
+        </button></h3>
+        <div class="card-body">
+          <ol class="steps"><li><h4>Record the visible outcome</h4><p>Open a local text
+            editor. Write one sentence describing what you observed, without inferring
+            a cause. Use synthetic data only.</p></li></ol>
+          <p>Expected result: one observation that another person could check.</p>
+        </div>
+      </article>
+    </section>
+    <section class="chapter" id="ch-check">
+      <h2 class="chapter-label">Evidence / Identify the gap</h2>
+      <article class="card" id="card-evidence">
+        <div class="slide-content"><h2 class="slide-title">Record the gap.<br><em>Do not fill it with confidence.</em></h2></div>
+        <h3 class="card-head"><button class="card-toggle" type="button" aria-expanded="false">
+          <span class="card-num" aria-hidden="true"></span><span class="card-titles">
+          <span class="card-title">A missing check stays missing</span></span><span class="card-mark" aria-hidden="true"></span>
+        </button></h3>
+        <div class="card-body">
+          <ol class="steps"><li><h4>Name the evidence</h4><p>Add the source and version
+            that support your observation. If you cannot identify them, write
+            <code>Not recorded</code>.</p></li></ol>
+          <div class="reveal"><button class="reveal-toggle" type="button" aria-expanded="false">Show why the gap matters</button>
+            <div class="reveal-body"><p>A result without a version cannot establish
+              what changed. A local note cannot certify that a cloud run occurred.</p></div>
+          </div>
+          <p>Expected result: each claim has a source or an explicit gap.</p>
+        </div>
+      </article>
+    </section>
+    <section class="chapter" id="ch-resume">
+      <h2 class="chapter-label">Decision / Save the next check</h2>
+      <article class="card" id="card-next-check">
+        <div class="slide-content"><h2 class="slide-title">Leave with<br><em>one testable next action.</em></h2></div>
+        <h3 class="card-head"><button class="card-toggle" type="button" aria-expanded="false">
+          <span class="card-num" aria-hidden="true"></span><span class="card-titles">
+          <span class="card-title">A saved record makes the next check repeatable</span></span><span class="card-mark" aria-hidden="true"></span>
+        </button></h3>
+        <div class="card-body">
+          <ol class="steps"><li><h4>Save the next action</h4><p>Name one check that would
+            address the gap. Save your text file locally. Reopen it and verify your
+            observation, source and next action survived.</p></li></ol>
+          <p>If the file is absent, use your editor's Save As command and choose a
+            known local folder. To resume, reopen that file; to reset, create a new
+            record without overwriting the original. Delete only that local file
+            when you no longer need it.</p>
+          <p>Optional extension: ask a peer to distinguish your observation from
+            your conclusion using only the saved record.</p>
+        </div>
+      </article>
+    </section>
+  </main>
+  <section class="takeaway" id="closing">
+    <p>Keep the observation, its evidence and its limit together.</p>
+    <div class="slide-content slide-content--end"><h2 class="slide-title">Be precise<br><em>about what you know.</em></h2></div>
+  </section>
+  <footer class="doc-footer"><span>Microsoft Foundry One-Day Workshop</span></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!doctype html>
+<!--
+MIT License
+
+Copyright (c) 2026 Tomáš Kubica
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<html lang="en" data-default-accent="blue" data-page="lab-guide">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build an agent and prove its guardrail - Microsoft Foundry One-Day Workshop</title>
+<meta name="description" content="Build a customer-facing pickup assistant, compare two models, block synthetic personal information, then inspect an annotated trace.">
+<meta name="doc-id" content="chapter-2-build-agent">
+<script data-doc-bootstrap>
+/* Inline in the head before styles with sync-head.js. No deferred bootstrap. */
+(() => {
+  "use strict";
+  const root = document.documentElement;
+  const params = new URLSearchParams(location.search);
+  const id = document.querySelector('meta[name="doc-id"]')?.content ||
+    location.pathname.replace(/\.standalone(?=\.html$)/i, "");
+  const prefix = "html-docs:" + id + ":";
+  const choices = { theme: ["light", "dark"], accent: ["blue", "orange", "green"] };
+  const read = (name) => {
+    try { return localStorage.getItem(prefix + name); }
+    catch { return null; /* Storage may be unavailable for local files. */ }
+  };
+  const write = (name, value) => {
+    try { localStorage.setItem(prefix + name, value); }
+    catch { /* The current view still works without persistence. */ }
+  };
+  function refresh() {
+    for (const name of Object.keys(choices)) {
+      const current = root.getAttribute("data-" + name);
+      const next = choices[name][(choices[name].indexOf(current) + 1) % choices[name].length];
+      document.querySelectorAll('[data-action="toggle-' + name + '"]').forEach(button => {
+        button.textContent = name === "theme" ? (next === "dark" ? "Dark" : "Light") :
+          "Accent: " + current[0].toUpperCase() + current.slice(1);
+        button.setAttribute("aria-label", name === "theme" ? "Switch to " + next + " theme" :
+          "Accent: " + current + ". Switch to " + next);
+      });
+    }
+  }
+  for (const [name, values] of Object.entries(choices)) {
+    const fallback = name === "theme" && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : values[0];
+    const value = [params.get(name), read(name), root.getAttribute("data-default-" + name), fallback]
+      .find(candidate => values.includes(candidate));
+    root.setAttribute("data-" + name, value);
+  }
+  root.classList.add("js");
+  if (params.get("view") === "slides") root.setAttribute("data-view", "slides");
+  window.HtmlDocs = { read, write, refresh };
+  document.addEventListener("DOMContentLoaded", refresh);
+  document.addEventListener("click", event => {
+    const button = event.target.closest('[data-action="toggle-theme"], [data-action="toggle-accent"]');
+    if (!button) return;
+    const name = button.getAttribute("data-action").slice(7);
+    const values = choices[name];
+    const next = values[(values.indexOf(root.getAttribute("data-" + name)) + 1) % values.length];
+    root.setAttribute("data-" + name, next);
+    write(name, next);
+    // Replace a URL override too, so reloading preserves a deliberate change.
+    const url = new URL(location.href);
+    if (url.searchParams.has(name)) {
+      url.searchParams.set(name, next);
+      history.replaceState(null, "", url.href);
+    }
+    refresh();
+  });
+})();
+</script>
+<style data-doc-tokens>
+/* Canonical tokens. Inline with sync-head.js; one accent family at a time. */
+:root {
+  color-scheme: light;
+  --bg: #fafafa; --surface: #ffffff; --surface-2: #f2f2f2; --surface-3: #e8e8e8;
+  --border: #dedede; --border-strong: #b8b8b8;
+  --text: #161616; --text-muted: #565656; --text-faint: #686868;
+  --accent-light: #0068bd; --accent-dark: #69b8ff;
+  --accent: var(--accent-light);
+  --accent-strong: var(--accent);
+  --accent-quiet: var(--accent);
+  --accent-soft: color-mix(in srgb, var(--accent) 9%, var(--bg));
+  --accent-border: color-mix(in srgb, var(--accent) 36%, var(--bg));
+  --warn: var(--accent); --warn-soft: var(--accent-soft); --warn-border: var(--accent-border);
+  --code-bg: var(--surface-2); --code-border: var(--border);
+  --focus: var(--accent);
+  --shadow-1: 0 1px 2px rgba(0,0,0,.04);
+  --shadow-2: 0 2px 4px rgba(0,0,0,.04), 0 12px 28px rgba(0,0,0,.06);
+  --radius: 10px; --radius-sm: 6px; --canvas: 1160px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Cascadia Mono", "Cascadia Code", ui-monospace, Consolas, "SF Mono", "Liberation Mono", Menlo, monospace;
+}
+[data-theme="dark"], :root:not([data-theme])[data-default-theme="dark"] {
+  color-scheme: dark;
+  --bg: #101010; --surface: #191919; --surface-2: #232323; --surface-3: #2c2c2c;
+  --border: #363636; --border-strong: #595959;
+  --text: #f2f2f2; --text-muted: #b5b5b5; --text-faint: #a0a0a0;
+  --accent: var(--accent-dark);
+  --shadow-1: 0 1px 2px rgba(0,0,0,.3);
+  --shadow-2: 0 2px 4px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.4);
+}
+[data-accent="orange"], :root:not([data-accent])[data-default-accent="orange"] {
+  --accent-light: #a94000; --accent-dark: #ffae72;
+}
+[data-accent="green"], :root:not([data-accent])[data-default-accent="green"] {
+  --accent-light: #137344; --accent-dark: #6cd6a0;
+}
+</style>
+<link rel="stylesheet" href="../assets/html-docs/article.css">
+<link rel="stylesheet" href="../assets/html-docs/slides.css">
+<link rel="stylesheet" href="../assets/document-navigation.css">
+<link rel="stylesheet" href="../assets/lab-articles.css">
+<script src="../assets/html-docs/article.js" defer></script>
+<script src="../assets/html-docs/slides.js" defer></script>
+<script src="../assets/lab-articles.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#content">Skip to the lab steps</a>
+<div class="controls" role="group" aria-label="Article controls">
+  <button type="button" class="ctrl" data-action="expand-all">Expand all</button>
+  <button type="button" class="ctrl" data-action="collapse-all">Collapse all</button>
+  <button type="button" class="ctrl" data-action="toggle-slides" aria-pressed="false">Slides</button>
+  <button type="button" class="ctrl" data-action="toggle-theme">Dark</button>
+  <button type="button" class="ctrl" data-action="toggle-accent">Accent: Blue</button>
+</div>
+<div class="doc">
+<header class="doc-header" id="opening">
+  <div class="slide-content slide-content--title"><h2 class="slide-title">Help the customer.<br><em>Control the data.</em></h2><p class="slide-lead">Build now. Measure the personality later.</p></div>
+  <p class="eyebrow">Chapter 2 &middot; Hands-on</p>
+  <h1>Build an agent and prove its guardrail</h1>
+  <p class="subtitle">Create a pickup assistant, compare two models, then block and annotate a synthetic email. Keep the agent for later improvement.</p>
+  <ul class="lab-meta">
+    <li><strong>Time</strong>30 minutes</li>
+    <li><strong>Environment</strong>Your prepared Foundry project; browser only</li>
+    <li><strong>Outcome</strong>A customer conversation and an attributed PII control</li>
+  </ul>
+</header>
+<nav class="doc-nav" aria-label="Workshop navigation"><a href="../index.html">Workshop index</a><a href="learning-passport.html">Learning passport</a></nav>
+<nav class="toc" aria-label="Contents"><p class="toc-label">Contents</p><ol>
+  <li><a href="#ch-before-you-start">Prepared seat</a></li>
+  <li><a href="#ch-create-agent">Customer conversation</a></li>
+  <li><a href="#ch-model-choice">Model comparison</a></li>
+  <li><a href="#ch-guardrail">Block, then annotate</a></li>
+  <li><a href="#ch-decision">Evidence and next chapter</a></li>
+</ol></nav>
+<main id="content">
+<section class="chapter" id="ch-before-you-start"><h2 class="chapter-label">Prepared seat</h2>
+<article class="card card--lead" id="card-before-you-start-1" data-open>
+  <div class="slide-content"><h2 class="slide-title">Start in the prepared project.</h2><p class="slide-lead">Synthetic data only. No installation.</p></div>
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="true"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Verify access before starting</span><span class="card-sub">Your account, your project, your agent.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body" id="before-you-start">
+    <p id="before-you-start-heading">Open <a href="https://ai.azure.com">ai.azure.com</a> with your assigned workshop account. Select the tenant and project from your seat details; check the project name before creating anything.</p>
+    <p id="prepared-seat-readiness">Confirm with your facilitator that your seat can create agents and personal-information guardrails, select the models below, and read traces. If sign-in or a required control is unavailable, stop and contact your facilitator; do not switch to a personal account or deploy replacements.</p>
+    <p>Models: admin-connected <code>gpt-5.6-luna</code> and <code>Mistral-Large-3</code>; project-local <code>gpt-5.2</code>. Personal information (PII) includes email addresses. Use only the fictional address supplied here.</p>
+  </div>
+</article>
+</section>
+<section class="chapter" id="ch-create-agent"><h2 class="chapter-label">Customer conversation</h2>
+<article class="card" id="card-create-agent-1">
+  <div class="slide-content"><h2 class="slide-title">Give the assistant a job.</h2><p class="slide-lead">Leave its tone unconfigured.</p></div>
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Create your pickup assistant</span><span class="card-sub">Task and boundaries, not a personality prompt.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body" id="create-agent">
+    <ol class="steps">
+      <li><p id="create-agent-heading">Open <strong>Build &rarr; Agents &rarr; New agent &rarr; Build an agent</strong>. Name it <code>pickup-&lt;your-seat-number&gt;</code> and select <strong>Create</strong>. If that name exists and is not yours, choose a new suffix.</p></li>
+      <li><p>Under <strong>Tools</strong>, remove any automatically attached tool, such as Web search, using its <strong>... &rarr; Remove</strong> menu. Leave knowledge empty. Paste these instructions and select <strong>Save</strong> if changes are pending.</p></li>
+    </ol>
+    <div class="code" id="baseline-instructions"><p class="code-label">Instructions</p><pre><code>You help customers with fictional click-and-collect orders.
+Use only the facts supplied in the conversation.
+You cannot look up orders, send messages, or change reservations.</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy aria-label="Copy Instructions">Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
+    <p>Select <code>gpt-5.6-luna</code> under <strong>Admin-connected</strong>, save any change.</p>
+    <p><strong>Why:</strong> define what the assistant knows and can do. Do not add a greeting style, empathy rubric, length rule or response template yet.</p>
+    <div class="checkpoint"><span class="checkpoint__label">Check</span><p>The configuration shows your instructions and a saved agent version. Leave knowledge and tools empty.</p></div>
+  </div>
+</article>
+<article class="card" id="card-create-agent-2">
+  <div class="slide-content"><h2 class="slide-title">Meet the assistant as a customer.</h2><p class="slide-lead">The message supplies every order fact.</p></div>
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Send the first customer message</span><span class="card-sub">Notice its greeting, tone and next step.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body">
+    <p>Start <strong>New chat</strong>. Send:</p>
+    <div class="code" id="customer-prompt"><p class="code-label">Customer message</p><pre><code>Hi! This is a fictional training case. My order for hand cream was meant to be ready this morning, but I have not received a pickup notice and I am frustrated.
+The order is still being prepared. Pickup is allowed only after the ready notification. The store closes at 18:00.
+Can you help me work out what to do?</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy aria-label="Copy Customer message">Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
+    <p><strong>Why:</strong> experience a customer-facing answer, not a structured report. All facts come from this message, not a database or document.</p>
+    <div class="checkpoint"><span class="checkpoint__label">Check</span><p>You receive an answer about the pickup. Note how it greets you, handles frustration and explains the next step. Flag invented readiness times or claims to have checked the order.</p></div>
+  </div>
+</article>
+</section>
+<section class="chapter" id="ch-model-choice"><h2 class="chapter-label">Model comparison</h2>
+<article class="card" id="card-model-choice-1">
+  <div class="slide-content"><h2 class="slide-title">Change the model, not the task.</h2><p class="slide-lead">Two answers give a first impression.</p></div>
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Compare the same message with Mistral</span><span class="card-sub">A fresh chat prevents reuse of the first answer.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body" id="model-choice">
+    <p id="model-choice-heading">Keep the first answer and its model/version in your notes. Select <code>Mistral-Large-3</code>, save, start <strong>New chat</strong>, and send the identical <a href="#customer-prompt">customer message</a>.</p>
+    <p><strong>Why:</strong> compare factual restraint, tone and usefulness without changing the instructions or conversation history.</p>
+    <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Choose a provisional favourite and name one difference. Both answers may already be good; do not manufacture a failure.</p></div>
+  </div>
+</article>
+</section>
+<section class="chapter" id="ch-guardrail"><h2 class="chapter-label">Block, then annotate</h2>
+<article class="card" id="card-guardrail-1">
+  <div class="slide-content"><h2 class="slide-title">Establish an unblocked baseline.</h2><p class="slide-lead">Change only the email between cases.</p></div>
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Try an email before adding a PII control</span><span class="card-sub">Use the local model for the rehearsed guardrail path.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body" id="guardrail">
+    <p id="guardrail-heading">Switch to <code>gpt-5.2</code> under <strong>Deployments</strong> and save. Keep the default guardrail; do not disable existing controls. Send each message in a separate <strong>New chat</strong>.</p>
+    <div class="code" id="control-prompt"><p class="code-label">Control: no email</p><pre><code>Hi! In this fictional training case, my order is still being prepared and pickup requires a ready notification. What should I do?</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy aria-label="Copy Control: no email">Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
+    <div class="code" id="pii-prompt"><p class="code-label">Same case with synthetic email</p><pre><code>Hi! In this fictional training case, my order is still being prepared and pickup requires a ready notification. What should I do?
+My contact email is alex.customer@example.com.</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy aria-label="Copy Same case with synthetic email">Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
+    <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Both messages receive an answer without a PII policy block.</p></div>
+  </div>
+</article>
+<article class="card" id="card-guardrail-2">
+  <div class="slide-content"><h2 class="slide-title">Block personal information at input.</h2><p class="slide-lead">Scope the policy to your agent only.</p></div>
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Create an email-blocking guardrail</span><span class="card-sub">Keep all existing default controls.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body">
+    <ol class="steps">
+      <li><p>Open <strong>Build &rarr; Guardrails &rarr; Create</strong>. Under <strong>Sensitive data leakage</strong>, set <strong>Risk type</strong> to <strong>PII (Preview)</strong>, choose <strong>Email protection</strong>, intervention point <strong>User input</strong> and action <strong>Block</strong>. Leave the default controls unchanged.</p></li>
+      <li><p>Select <strong>Next</strong> to assign the guardrail. Select only your <code>pickup-&lt;your-seat-number&gt;</code> agent; leave all models unselected. Select <strong>Next</strong>.</p></li>
+      <li><p>Name the policy <code>pickup-pii-&lt;your-seat-number&gt;</code>. Confirm your agent is listed and <strong>Models</strong> says <strong>No models selected</strong>, then select <strong>Create</strong>. Return to your agent and save if changes remain unapplied.</p></li>
+    </ol>
+    <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Your agent names the new policy; Email is controlled at User input. If PII, Email, User input or the action is unavailable, stop this section and contact your facilitator. Do not substitute a keyword blocklist.</p></div>
+    <p><strong>Why:</strong> the platform control, rather than a personality instruction, decides whether this input is accepted.</p>
+  </div>
+</article>
+<article class="card" id="card-guardrail-3">
+  <div class="slide-content"><h2 class="slide-title">A block needs a passing control.</h2><p class="slide-lead">Policy attribution matters more than refusal wording.</p></div>
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Repeat both messages and identify the block</span><span class="card-sub">Fresh chats keep the email out of the control case.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body">
+    <p>On <code>gpt-5.2</code>, resend the <a href="#control-prompt">control</a> and <a href="#pii-prompt">email message</a>, each in a separate <strong>New chat</strong>.</p>
+    <div class="checkpoint"><span class="checkpoint__label">Check</span><p>The control answers. The email message triggers a platform guardrail block identifying personal information at user input. Record the request ID or trace link and policy action.</p></div>
+  </div>
+</article>
+<article class="card" id="card-guardrail-4">
+  <div class="slide-content"><h2 class="slide-title">Annotate detects without blocking.</h2><p class="slide-lead">It does not sanitize the model input.</p></div>
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Change only the email action to Annotate</span><span class="card-sub">Keep the model, instructions and message unchanged.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body">
+    <p>Open your policy under <strong>Build &rarr; Guardrails &rarr; Edit</strong>. Change the <strong>Email protection / User input</strong> action from <strong>Block</strong> to <strong>Annotate</strong>. Keep other controls and the single-agent assignment unchanged, then finish the wizard.</p>
+    <p>Return to your agent, save any pending changes, start <strong>New chat</strong>, and resend the exact <a href="#pii-prompt">email message</a>. Keep its response ID or trace link.</p>
+    <div class="checkpoint"><span class="checkpoint__label">Check</span><p>The request now completes. The next step must confirm Email was still detected; an answer alone does not prove annotation.</p></div>
+    <p><strong>Why:</strong> annotation lets you observe a risk without stopping the request. It is not masking or anonymization. Edit only your own policy: changing a policy can affect every agent version assigned to it.</p>
+  </div>
+</article>
+</section>
+<section class="chapter" id="ch-decision"><h2 class="chapter-label">Evidence and next chapter</h2>
+<article class="card" id="card-decision-1">
+  <div class="slide-content"><h2 class="slide-title">Find the detection in the trace.</h2><p class="slide-lead">Same email. Different enforcement.</p></div>
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Inspect the exact annotated invocation</span><span class="card-sub">Look at the agent span, not only the chat reply.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body" id="decision">
+    <p id="decision-heading">Select <strong>Traces</strong> beneath the annotated reply. In <strong>Trajectories</strong>, select its <code>invoke_agent</code> span and open <strong>Metadata</strong>. Match the response ID and locate <code>microsoft.foundry.<wbr>content_filter.<wbr>results</code>.</p>
+    <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Under <code>source_type: prompt</code>, find <code>personally_<wbr>identifiable_<wbr>information</code>: <code>detected: true</code>, <code>filtered: false</code>, category <code>Email</code>. The blocked call instead records <code>filtered: true</code>.</p></div>
+    <p><strong>Why:</strong> this connects the visible answer to the platform's decision. Traces can contain the original email, so keep all data synthetic.</p>
+  </div>
+</article>
+<article class="card" id="card-decision-2">
+  <div class="slide-content"><h2 class="slide-title">Keep the baseline for improvement.</h2><p class="slide-lead">Later, change the prompt and measure again.</p></div>
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Keep this agent for the next chapters</span><span class="card-sub">Do not tune the personality or delete the agent yet.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body">
+    <p>Record your agent name/version, original instructions, model, policy name/action and one trace ID in your local notes or the <a href="learning-passport.html#checkpoint-c2">Build section of the learning passport</a>. The passport's stock-operations extension fields are not required for Labs 2 and 3. Keep the agent on <code>gpt-5.2</code> with your lab-only Annotate policy.</p>
+    <p>Knowledge will add facts beyond the message. Custom evaluations will turn impressions of empathy, tone and usefulness into a rubric: baseline run, prompt change, same-case rerun. Keep model, policy and knowledge fixed during that comparison.</p>
+    <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Your agent remains available, its original instructions are unchanged, and you can distinguish detected data from blocked data. A neutral prompt may already produce a friendly answer; improvement must be measured, not assumed.</p></div>
+  </div>
+</article>
+</section>
+<section class="chapter" id="resume-cleanup">
+  <h2 class="chapter-label">Resume, reset and cleanup</h2>
+  <p><strong>Resume:</strong> reopen your assigned tenant, project and <code>pickup-&lt;seat&gt;</code> agent. Check its saved version, <code>gpt-5.2</code> model and your named guardrail policy before continuing at the last completed checkpoint. Do not create a duplicate agent to recover a missing trace; wait about two minutes, then ask your facilitator with the response ID.</p>
+  <p><strong>Reset this exercise:</strong> first save your notes and version IDs. In your own agent, restore the <a href="#baseline-instructions">three-line baseline instructions</a>, select <code>gpt-5.2</code> and save a new version. In your own lab-only policy, restore <strong>Email protection / User input / Block</strong> before replaying the Block and Annotate steps. Keep other controls unchanged. Ask your facilitator instead of editing a shared policy.</p>
+  <p><strong>Cleanup:</strong> keep your agent and its lab-only policy for Lab 3. After your final lab, export your notes and give the facilitator your seat, agent and policy names. The facilitator owns removal of workshop resources; do not delete a project, model deployment or shared policy. Keep using synthetic data while Annotate is enabled; do not leave that lab setting attached to a production agent.</p>
+</section>
+</main>
+<section class="takeaway" id="closing"><p>You created an agent, tried different models, enabled guardrails, and inspected traces.</p><div class="slide-content slide-content--end"><h2 class="slide-title">Build the baseline.<br><em>Then earn the improvement.</em></h2></div></section>
+<footer class="doc-footer">Microsoft Foundry One-Day Workshop</footer>
+</div>
+</body>
+</html>

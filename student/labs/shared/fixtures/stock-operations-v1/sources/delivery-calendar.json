@@ -1,0 +1,30 @@
+{
+  "source_id": "delivery-calendar",
+  "title": "Synthetic delivery calendar",
+  "document_type": "reference_table",
+  "owner": "Synthetic Distribution Planning",
+  "effective_from": "2026-09-01",
+  "effective_to": "2026-09-30",
+  "status": "current",
+  "entries": [
+    {
+      "store_code": "STORE-042",
+      "scheduled_local": "2026-09-17T06:30:00+02:00",
+      "delivery_reference": "SYN-DEL-420917"
+    },
+    {
+      "store_code": "STORE-017",
+      "scheduled_local": "2026-09-18T07:15:00+02:00",
+      "delivery_reference": "SYN-DEL-170918"
+    },
+    {
+      "store_code": "PLZEN-031",
+      "scheduled_local": "2026-09-19T05:45:00+02:00",
+      "delivery_reference": "SYN-DEL-310919"
+    }
+  ],
+  "limitations": [
+    "The table is static workshop data, not a live delivery system.",
+    "Supplier status and vehicle position are not present."
+  ]
+}

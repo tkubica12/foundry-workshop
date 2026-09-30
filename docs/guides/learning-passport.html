@@ -1,0 +1,471 @@
+<!doctype html>
+<!--
+MIT License
+
+Copyright (c) 2026 Tomáš Kubica
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<html lang="en" data-default-accent="blue" data-page="learning-passport">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Learning passport - Microsoft Foundry One-Day Workshop</title>
+<meta name="description" content="Capture workshop checkpoints, candidate lineage, evaluation evidence, and an honest local-only release decision.">
+<meta name="doc-id" content="learning-passport">
+<script data-doc-bootstrap>
+/* Inline in the head before styles with sync-head.js. No deferred bootstrap. */
+(() => {
+  "use strict";
+  const root = document.documentElement;
+  const params = new URLSearchParams(location.search);
+  const id = document.querySelector('meta[name="doc-id"]')?.content ||
+    location.pathname.replace(/\.standalone(?=\.html$)/i, "");
+  const prefix = "html-docs:" + id + ":";
+  const choices = { theme: ["light", "dark"], accent: ["blue", "orange", "green"] };
+  const read = (name) => {
+    try { return localStorage.getItem(prefix + name); }
+    catch { return null; /* Storage may be unavailable for local files. */ }
+  };
+  const write = (name, value) => {
+    try { localStorage.setItem(prefix + name, value); }
+    catch { /* The current view still works without persistence. */ }
+  };
+  function refresh() {
+    for (const name of Object.keys(choices)) {
+      const current = root.getAttribute("data-" + name);
+      const next = choices[name][(choices[name].indexOf(current) + 1) % choices[name].length];
+      document.querySelectorAll('[data-action="toggle-' + name + '"]').forEach(button => {
+        button.textContent = name === "theme" ? (next === "dark" ? "Dark" : "Light") :
+          "Accent: " + current[0].toUpperCase() + current.slice(1);
+        button.setAttribute("aria-label", name === "theme" ? "Switch to " + next + " theme" :
+          "Accent: " + current + ". Switch to " + next);
+      });
+    }
+  }
+  for (const [name, values] of Object.entries(choices)) {
+    const fallback = name === "theme" && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : values[0];
+    const value = [params.get(name), read(name), root.getAttribute("data-default-" + name), fallback]
+      .find(candidate => values.includes(candidate));
+    root.setAttribute("data-" + name, value);
+  }
+  root.classList.add("js");
+  if (params.get("view") === "slides") root.setAttribute("data-view", "slides");
+  window.HtmlDocs = { read, write, refresh };
+  document.addEventListener("DOMContentLoaded", refresh);
+  document.addEventListener("click", event => {
+    const button = event.target.closest('[data-action="toggle-theme"], [data-action="toggle-accent"]');
+    if (!button) return;
+    const name = button.getAttribute("data-action").slice(7);
+    const values = choices[name];
+    const next = values[(values.indexOf(root.getAttribute("data-" + name)) + 1) % values.length];
+    root.setAttribute("data-" + name, next);
+    write(name, next);
+    // Replace a URL override too, so reloading preserves a deliberate change.
+    const url = new URL(location.href);
+    if (url.searchParams.has(name)) {
+      url.searchParams.set(name, next);
+      history.replaceState(null, "", url.href);
+    }
+    refresh();
+  });
+})();
+</script>
+<style data-doc-tokens>
+/* Canonical tokens. Inline with sync-head.js; one accent family at a time. */
+:root {
+  color-scheme: light;
+  --bg: #fafafa; --surface: #ffffff; --surface-2: #f2f2f2; --surface-3: #e8e8e8;
+  --border: #dedede; --border-strong: #b8b8b8;
+  --text: #161616; --text-muted: #565656; --text-faint: #686868;
+  --accent-light: #0068bd; --accent-dark: #69b8ff;
+  --accent: var(--accent-light);
+  --accent-strong: var(--accent);
+  --accent-quiet: var(--accent);
+  --accent-soft: color-mix(in srgb, var(--accent) 9%, var(--bg));
+  --accent-border: color-mix(in srgb, var(--accent) 36%, var(--bg));
+  --warn: var(--accent); --warn-soft: var(--accent-soft); --warn-border: var(--accent-border);
+  --code-bg: var(--surface-2); --code-border: var(--border);
+  --focus: var(--accent);
+  --shadow-1: 0 1px 2px rgba(0,0,0,.04);
+  --shadow-2: 0 2px 4px rgba(0,0,0,.04), 0 12px 28px rgba(0,0,0,.06);
+  --radius: 10px; --radius-sm: 6px; --canvas: 1160px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Cascadia Mono", "Cascadia Code", ui-monospace, Consolas, "SF Mono", "Liberation Mono", Menlo, monospace;
+}
+[data-theme="dark"], :root:not([data-theme])[data-default-theme="dark"] {
+  color-scheme: dark;
+  --bg: #101010; --surface: #191919; --surface-2: #232323; --surface-3: #2c2c2c;
+  --border: #363636; --border-strong: #595959;
+  --text: #f2f2f2; --text-muted: #b5b5b5; --text-faint: #a0a0a0;
+  --accent: var(--accent-dark);
+  --shadow-1: 0 1px 2px rgba(0,0,0,.3);
+  --shadow-2: 0 2px 4px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.4);
+}
+[data-accent="orange"], :root:not([data-accent])[data-default-accent="orange"] {
+  --accent-light: #a94000; --accent-dark: #ffae72;
+}
+[data-accent="green"], :root:not([data-accent])[data-default-accent="green"] {
+  --accent-light: #137344; --accent-dark: #6cd6a0;
+}
+</style>
+<link rel="stylesheet" href="../assets/html-docs/article.css">
+<link rel="stylesheet" href="../assets/html-docs/slides.css">
+<link rel="stylesheet" href="../assets/document-navigation.css">
+<link rel="stylesheet" href="../assets/lab-articles.css">
+<script src="../assets/html-docs/article.js" defer></script>
+
+<script src="../assets/lab-articles.js" defer></script>
+<script src="../assets/learning-passport.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#passport">Skip to the passport</a>
+<div class="controls" role="group" aria-label="Article controls">
+  <button type="button" class="ctrl" data-action="expand-all">Expand all</button>
+  <button type="button" class="ctrl" data-action="collapse-all">Collapse all</button>
+
+  <button type="button" class="ctrl" data-action="toggle-theme">Dark</button>
+  <button type="button" class="ctrl" data-action="toggle-accent">Accent: Blue</button>
+</div>
+<div class="doc">
+<header class="doc-header" id="opening"><div class="slide-content slide-content--title"><h2 class="slide-title">Carry the evidence.<br><em>Not a forced pass.</em></h2></div>
+    <p class="eyebrow">Build notes &middot; Optional stock-operations worksheet</p>
+    <h1>Carry evidence forward without forcing a pass</h1>
+    <p class="subtitle">Use the Build section for your Lab 2 agent and guardrail notes. The remaining stock-operations fields belong to a separately prepared extension, not the published pickup labs. This passport stays in your browser, exports inspectable data and never submits to a server.</p>
+    <ul class="lab-meta">
+      <li><strong>Fixture</strong>stock-operations-v1</li>
+      <li><strong>Build</strong>foundry-one-day-baseline</li>
+      <li><strong>Boundary</strong>Synthetic operational data only</li>
+    </ul>
+    <div class="callout callout--note"><span class="callout-label">Choose only the relevant worksheet</span><p>For Labs 2 and 3, record the <a href="#checkpoint-c2">Build fields</a> and keep Lab 3 run/version pairs in your local notes. Do not fill grounding, capstone, holdout or release gates to finish these labs. C1&ndash;C5 below are worksheet identifiers, not the current agenda's chapter numbers. The stock-operations extension has no published lab guide yet; use it only with a separately prepared facilitator exercise. Its synthetic fixture includes T02 for restricted-source isolation and T03 for a service-enforced denied write, neither of which is tested by the pickup style comparison.</p></div>
+  </header><div class="passport-tools" aria-label="Local passport controls"><div class="passport-actions">
+    <button class="lab-button" type="button" data-export>Export JSON</button>
+    <button class="lab-button" type="button" data-import-trigger>Import JSON</button>
+    <button class="lab-button" type="button" data-reset>Reset</button>
+    <input type="file" accept="application/json,.json" data-import-input hidden>
+  </div><p class="status" data-save-status aria-live="polite">JavaScript is unavailable. Print this readable worksheet or enable JavaScript for local save, export, and import.</p><noscript><p class="noscript-note"><strong>Local controls are unavailable.</strong> Every field and evidence rule remains readable and printable. No information has been sent anywhere.</p></noscript></div>
+<nav class="doc-nav" aria-label="Workshop navigation">
+<a href="../index.html">Workshop index</a>
+<a href="chapter-2-build-agent.html">Chapter 2 lab</a>
+</nav>
+<nav class="toc" aria-label="Contents"><p class="toc-label">Contents</p><ol>
+<li><a href="#ch-observe">C1 · Prepared evidence</a></li><li><a href="#ch-build-ground">C2–C3 · Build and ground</a></li><li><a href="#ch-measure">C4 · Candidate evidence</a></li><li><a href="#ch-lineage">Capstone · Lineage</a></li><li><a href="#ch-decide">C5 · Release evidence</a></li><li><a href="#ch-privacy">Data boundary</a></li></ol></nav>
+<main id="passport"><form class="passport-form" data-passport-form autocomplete="off"><section class="chapter" id="ch-observe"><h2 class="chapter-label">C1 · Prepared evidence</h2>
+
+<article class="card card--lead" id="card-checkpoint-c1" data-open>
+  <div class="slide-content"><h2 class="slide-title">Start with inspected evidence.</h2></div>
+  <h3 class="card-head">
+    <button type="button" class="card-toggle" aria-expanded="true">
+      <span class="card-num" aria-hidden="true"></span>
+      <span class="card-titles"><span class="card-title">Name the prepared evidence you inspected</span><span class="card-sub">Enter your seat label and the prepared state you actually inspected.</span></span>
+      <span class="card-mark" aria-hidden="true"></span>
+    </button>
+  </h3>
+  <div class="card-body" id="checkpoint-c1">
+        <p class="section-label">C1 &middot; Observe</p>
+        <h4 id="c1-heading">Name the prepared evidence you inspected</h4>
+        <div class="field-grid">
+          <div class="field"><label for="build-id">Workshop build ID</label><input id="build-id" name="meta.buildId" value="foundry-one-day-baseline"></div>
+          <div class="field"><label for="fixture-version">Fixture version</label><input id="fixture-version" name="meta.fixtureVersion" value="stock-operations-v1@1.0.0"></div>
+          <div class="field"><label for="seat-label">Seat label</label><input id="seat-label" name="meta.seatLabel" placeholder="seat-07"><small>Use a resource label, never a password or token.</small></div>
+          <div class="field"><label for="c1-agent">Prepared agent or recovery state</label><input id="c1-agent" name="c1.preparedAgent" placeholder="prepared-observe-07"></div>
+          <div class="field field--wide"><label for="c1-limit">What this evidence does not prove</label><textarea id="c1-limit" name="c1.limitation" placeholder="For example: the trace does not prove caller authorization."></textarea></div>
+        </div>
+      </div>
+</article>
+
+<article class="card" id="card-passport-use">
+  <div class="slide-content"><h2 class="slide-title">Export before moving on.</h2></div>
+  <h3 class="card-head">
+    <button type="button" class="card-toggle" aria-expanded="false">
+      <span class="card-num" aria-hidden="true"></span>
+      <span class="card-titles"><span class="card-title">Export at each checkpoint</span><span class="card-sub">Local save, JSON import/export, and reset stay in this browser.</span></span>
+      <span class="card-mark" aria-hidden="true"></span>
+    </button>
+  </h3>
+  <div class="card-body">
+      <p class="section-label">How to use it</p>
+      <h4 id="how-heading">Export at each checkpoint</h4>
+      <ol class="steps">
+        <li><h4>Record inspected evidence</h4><p>Enter names, versions, IDs, source excerpts, and limitations you can point to.</p></li>
+        <li><h4>Keep subjects separate</h4><p>Do not use a supplied reference result as evidence for your own candidate.</p></li>
+        <li><h4>Export before moving on</h4><p>Browser storage can be unavailable or cleared. Download JSON after C2, C3, C4, and C5.</p></li>
+      </ol>
+
+
+    </div>
+</article>
+</section>
+<section class="chapter" id="ch-build-ground"><h2 class="chapter-label">C2–C3 · Build and ground</h2>
+
+<article class="card" id="card-checkpoint-c2">
+  <div class="slide-content"><h2 class="slide-title">Record the version and control.</h2></div>
+  <h3 class="card-head">
+    <button type="button" class="card-toggle" aria-expanded="false">
+      <span class="card-num" aria-hidden="true"></span>
+      <span class="card-titles"><span class="card-title">Record your versioned prompt agent and control</span></span>
+      <span class="card-mark" aria-hidden="true"></span>
+    </button>
+  </h3>
+  <div class="card-body" id="checkpoint-c2">
+        <p class="section-label">C2 &middot; Build</p>
+        <h4 id="c2-heading">Record your versioned prompt agent and control</h4>
+        <div class="field-grid">
+          <div class="field"><label for="agent-name">Agent name</label><input id="agent-name" name="c2.agentName"></div>
+          <div class="field"><label for="agent-version">Agent version</label><input id="agent-version" name="c2.agentVersion"></div>
+          <div class="field"><label for="deployment-alias">Selected deployment alias</label><input id="deployment-alias" name="c2.deploymentAlias"></div>
+          <div class="field"><label for="model-shortlist">Model shortlist</label><input id="model-shortlist" name="c2.modelShortlist" placeholder="Alias A; Alias B"></div>
+          <div class="field field--wide"><label for="model-limit">Model evidence limitation</label><textarea id="model-limit" name="c2.modelLimitation"></textarea></div>
+          <div class="field"><label for="guardrail-name">Guardrail policy name</label><input id="guardrail-name" name="c2.guardrailName"></div>
+          <div class="field"><label for="guardrail-outcome">Attributed outcome</label><input id="guardrail-outcome" name="c2.guardrailOutcome" placeholder="policy block / model refusal / unknown"></div>
+        </div>
+      </div>
+</article>
+
+<article class="card" id="card-checkpoint-c3">
+  <div class="slide-content"><h2 class="slide-title">Trace the answer to a source.</h2></div>
+  <h3 class="card-head">
+    <button type="button" class="card-toggle" aria-expanded="false">
+      <span class="card-num" aria-hidden="true"></span>
+      <span class="card-titles"><span class="card-title">Connect the answer to inspectable knowledge</span></span>
+      <span class="card-mark" aria-hidden="true"></span>
+    </button>
+  </h3>
+  <div class="card-body" id="checkpoint-c3">
+        <p class="section-label">C3 &middot; Ground</p>
+        <h4 id="c3-heading">Connect the answer to inspectable knowledge</h4>
+        <div class="field-grid">
+          <div class="field"><label for="kb-name">Knowledge-base name</label><input id="kb-name" name="c3.knowledgeBaseName"></div>
+          <div class="field"><label for="grounded-version">Grounded agent/version</label><input id="grounded-version" name="c3.groundedVersion"></div>
+          <div class="field"><label for="source-id">Source ID/version</label><input id="source-id" name="c3.sourceIdVersion"></div>
+          <div class="field"><label for="baseline-version">Preserved ungrounded baseline</label><input id="baseline-version" name="c3.ungroundedBaseline"></div>
+          <div class="field field--wide"><label for="cited-excerpt">Exact cited excerpt</label><textarea id="cited-excerpt" name="c3.citedExcerpt"></textarea></div>
+          <div class="field field--wide"><label for="grounding-limit">Missing or conflicting evidence</label><textarea id="grounding-limit" name="c3.evidenceLimitation" placeholder="State unknown facts as insufficient evidence."></textarea></div>
+        </div>
+      </div>
+</article>
+</section>
+<section class="chapter" id="ch-measure"><h2 class="chapter-label">C4 · Candidate evidence</h2>
+
+<article class="card" id="card-checkpoint-c4">
+  <div class="slide-content"><h2 class="slide-title">Name the measured subject.</h2></div>
+  <h3 class="card-head">
+    <button type="button" class="card-toggle" aria-expanded="false">
+      <span class="card-num" aria-hidden="true"></span>
+      <span class="card-titles"><span class="card-title">Identify the exact evaluated subject</span></span>
+      <span class="card-mark" aria-hidden="true"></span>
+    </button>
+  </h3>
+  <div class="card-body" id="checkpoint-c4">
+        <p class="section-label">C4 &middot; Measure</p>
+        <h4 id="c4-heading">Fingerprint the exact evaluated candidate</h4>
+        <div class="field-grid">
+          <div class="field"><label for="baseline-eval">Baseline evaluation ID</label><input id="baseline-eval" name="c4.baselineEvaluationId"></div>
+          <div class="field"><label for="candidate-eval">Candidate evaluation ID</label><input id="candidate-eval" name="c4.candidateEvaluationId"></div>
+          <div class="field"><label for="trace-ids">Matching trace IDs</label><input id="trace-ids" name="c4.traceIds"></div>
+          <div class="field"><label for="evidence-subject">Evidence subject</label><select id="evidence-subject" name="c4.evidenceSubject"><option value="">Choose the measured subject</option><option value="own-candidate">My candidate</option><option value="supplied-reference">Supplied reference</option><option value="unknown">Unknown</option></select></div>
+        </div>
+        </div>
+</article>
+
+<article class="card" id="card-candidate-configuration">
+  <div class="slide-content"><h2 class="slide-title">Freeze the compared configuration.</h2></div>
+  <h3 class="card-head">
+    <button type="button" class="card-toggle" aria-expanded="false">
+      <span class="card-num" aria-hidden="true"></span>
+      <span class="card-titles"><span class="card-title">Seven fields define the candidate fingerprint</span><span class="card-sub">Instructions, route, sources, tools, policy, identity, and parameters.</span></span>
+      <span class="card-mark" aria-hidden="true"></span>
+    </button>
+  </h3>
+  <div class="card-body"><fieldset class="evidence-group">
+          <legend>Complete evaluated configuration</legend>
+          <p>Copy inspected values from the run. This worksheet checks consistency; it does not validate cloud runs or prove that an ID exists.</p>
+          <div class="field-grid">
+            <div class="field"><label for="instructions-hash">Instructions hash</label><input id="instructions-hash" name="c4.instructionsHash"></div>
+            <div class="field"><label for="model-route">Model route and version</label><input id="model-route" name="c4.modelRoute"></div>
+            <div class="field"><label for="source-hash">Source-set hash</label><input id="source-hash" name="c4.sourceSetHash"></div>
+            <div class="field"><label for="tool-hash">Tool-set hash</label><input id="tool-hash" name="c4.toolSetHash" placeholder="none, or exact read-only tool set"></div>
+            <div class="field"><label for="policy-hash">Policy hash</label><input id="policy-hash" name="c4.policyHash"></div>
+            <div class="field"><label for="identity">Effective evaluation identity</label><input id="identity" name="c4.effectiveIdentity"></div>
+            <div class="field field--wide"><label for="parameters">Generation parameters and limits</label><textarea id="parameters" name="c4.parameters" placeholder="Temperature, token budget, concurrency, and other compared settings."></textarea></div>
+            <div class="field field--wide"><label for="candidate-fingerprint">Candidate fingerprint</label><input id="candidate-fingerprint" name="c4.candidateFingerprint" data-fingerprint-output readonly><small>No fingerprint is created until all seven configuration fields are complete.</small></div>
+          </div>
+        </fieldset></div>
+</article>
+
+<article class="card" id="card-candidate-decisions">
+  <div class="slide-content"><h2 class="slide-title">Reference success is not yours.</h2></div>
+  <h3 class="card-head">
+    <button type="button" class="card-toggle" aria-expanded="false">
+      <span class="card-num" aria-hidden="true"></span>
+      <span class="card-titles"><span class="card-title">Keep own and reference decisions separate</span></span>
+      <span class="card-mark" aria-hidden="true"></span>
+    </button>
+  </h3>
+  <div class="card-body">
+        <div class="field-grid">
+          <div class="field"><label for="c4-own-decision">Own-candidate decision</label><select id="c4-own-decision" name="c4.ownDecision"><option value="">Choose after inspection</option><option>release</option><option>do not release</option><option>insufficient evidence</option></select></div>
+          <div class="field"><label for="reference-id">Supplied reference candidate ID</label><input id="reference-id" name="c4.referenceCandidateId"></div>
+          <div class="field"><label for="reference-fingerprint">Reference fingerprint</label><input id="reference-fingerprint" name="c4.referenceFingerprint"></div>
+          <div class="field"><label for="reference-decision">Reference-candidate decision</label><select id="reference-decision" name="c4.referenceDecision"><option value="">Not assessed</option><option>release</option><option>do not release</option><option>insufficient evidence</option></select></div>
+          <div class="field field--wide"><label for="c4-limit">Unavailable metrics, incomplete calls, or comparison limits</label><textarea id="c4-limit" name="c4.limitation"></textarea></div>
+        </div>
+      </div>
+</article>
+</section>
+<section class="chapter" id="ch-lineage"><h2 class="chapter-label">Capstone · Lineage</h2>
+
+<article class="card" id="card-capstone-lineage">
+  <div class="slide-content"><h2 class="slide-title">Preserve the parent candidate.</h2></div>
+  <h3 class="card-head">
+    <button type="button" class="card-toggle" aria-expanded="false">
+      <span class="card-num" aria-hidden="true"></span>
+      <span class="card-titles"><span class="card-title">Create a separate candidate without changing C4</span></span>
+      <span class="card-mark" aria-hidden="true"></span>
+    </button>
+  </h3>
+  <div class="card-body" id="capstone-lineage">
+        <p class="section-label">C4-to-capstone &middot; Preserve lineage</p>
+        <h4 id="lineage-heading">Create a separate candidate without changing C4</h4>
+        <div class="field-grid">
+          <div class="field"><label for="parent-version">C4 parent agent/version</label><input id="parent-version" name="capstone.parentVersion"></div>
+          <div class="field"><label for="parent-fingerprint">C4 parent fingerprint</label><input id="parent-fingerprint" name="capstone.parentFingerprint"></div>
+          <div class="field"><label for="capstone-name">Separate capstone candidate</label><input id="capstone-name" name="capstone.candidateName" placeholder="capstone-seat-07"></div>
+          <div class="field"><label for="capstone-source">Prepared source-set hash</label><input id="capstone-source" name="capstone.sourceSetHash"></div>
+          <div class="field"><label for="weak-clause">Weak baseline instruction hash</label><input id="weak-clause" name="capstone.instructionHash"></div>
+          <div class="field"><label for="starting-condition">Starting condition verified</label><input id="starting-condition" name="capstone.startingCondition" placeholder="current + superseded policy; weak freshness clause"></div>
+          <div class="field field--wide"><label for="capstone-delta">Exact delta from C4 parent</label><textarea id="capstone-delta" name="capstone.delta" placeholder="Record only the prescribed source and instruction changes."></textarea></div>
+        </div>
+      </div>
+</article>
+</section>
+<section class="chapter" id="ch-decide"><h2 class="chapter-label">C5 · Release evidence</h2>
+
+<article class="card" id="card-checkpoint-c5">
+  <div class="slide-content"><h2 class="slide-title">Missing proof stays visible.</h2></div>
+  <h3 class="card-head">
+    <button type="button" class="card-toggle" aria-expanded="false">
+      <span class="card-num" aria-hidden="true"></span>
+      <span class="card-titles"><span class="card-title">Release requires separate evidence gates</span></span>
+      <span class="card-mark" aria-hidden="true"></span>
+    </button>
+  </h3>
+  <div class="card-body" id="checkpoint-c5">
+        <p class="section-label">C5 &middot; Decide</p>
+        <h4 id="c5-heading">Make a release decision that exposes missing proof</h4>
+        <div class="callout callout--note">
+          <span class="callout-label">Release rule</span>
+          <p>Release requires evidence about your own fully fingerprinted candidate: all 8 development and 4 holdout cases attempted, zero incomplete, timed-out, or access-blocked cases, at least 7/8 and 3/4 passes, every critical assertion passing, no critical regression, the relevant operational budget passing, and separate T02/T03 authorization proof. This worksheet checks those entries for consistency; it does not validate the underlying cloud evidence.</p>
+        </div>
+        <div class="field-grid">
+          <div class="field"><label for="development-run">Development run ID</label><input id="development-run" name="c5.developmentRunId"></div>
+          <div class="field"><label for="holdout-run">Holdout run ID</label><input id="holdout-run" name="c5.holdoutRunId"></div>
+        </div>
+        </div>
+</article>
+
+<article class="card" id="card-case-results">
+  <div class="slide-content"><h2 class="slide-title">Count attempted and incomplete cases.</h2></div>
+  <h3 class="card-head">
+    <button type="button" class="card-toggle" aria-expanded="false">
+      <span class="card-num" aria-hidden="true"></span>
+      <span class="card-titles"><span class="card-title">Attempt every case before claiming a pass</span><span class="card-sub">Record development and holdout results separately.</span></span>
+      <span class="card-mark" aria-hidden="true"></span>
+    </button>
+  </h3>
+  <div class="card-body"><fieldset class="evidence-group">
+          <legend>Development set</legend>
+          <div class="field-grid">
+            <div class="field"><label for="development-passes">Passes</label><input id="development-passes" type="number" min="0" max="8" step="1" name="c5.developmentPasses"></div>
+            <div class="field"><label for="development-attempted">Unique cases attempted</label><input id="development-attempted" type="number" min="0" max="8" step="1" name="c5.developmentAttempted"></div>
+            <div class="field"><label for="development-incomplete">Incomplete cases</label><input id="development-incomplete" type="number" min="0" max="8" step="1" name="c5.developmentIncomplete"></div>
+            <div class="field"><label for="development-timeout">Timed-out cases</label><input id="development-timeout" type="number" min="0" max="8" step="1" name="c5.developmentTimedOut"></div>
+            <div class="field"><label for="development-access">Access-blocked cases</label><input id="development-access" type="number" min="0" max="8" step="1" name="c5.developmentAccessBlocked"></div>
+          </div>
+        </fieldset><fieldset class="evidence-group">
+          <legend>Holdout set</legend>
+          <div class="field-grid">
+            <div class="field"><label for="holdout-passes">Passes</label><input id="holdout-passes" type="number" min="0" max="4" step="1" name="c5.holdoutPasses"></div>
+            <div class="field"><label for="holdout-attempted">Unique cases attempted</label><input id="holdout-attempted" type="number" min="0" max="4" step="1" name="c5.holdoutAttempted"></div>
+            <div class="field"><label for="holdout-incomplete">Incomplete cases</label><input id="holdout-incomplete" type="number" min="0" max="4" step="1" name="c5.holdoutIncomplete"></div>
+            <div class="field"><label for="holdout-timeout">Timed-out cases</label><input id="holdout-timeout" type="number" min="0" max="4" step="1" name="c5.holdoutTimedOut"></div>
+            <div class="field"><label for="holdout-access">Access-blocked cases</label><input id="holdout-access" type="number" min="0" max="4" step="1" name="c5.holdoutAccessBlocked"></div>
+          </div>
+        </fieldset></div>
+</article>
+
+<article class="card" id="card-release-decision">
+  <div class="slide-content"><h2 class="slide-title">Behavior cannot prove authorization.</h2></div>
+  <h3 class="card-head">
+    <button type="button" class="card-toggle" aria-expanded="false">
+      <span class="card-num" aria-hidden="true"></span>
+      <span class="card-titles"><span class="card-title">Authorization remains a separate release gate</span><span class="card-sub">Record gates, requested decision, computed outcome, and rollback.</span></span>
+      <span class="card-mark" aria-hidden="true"></span>
+    </button>
+  </h3>
+  <div class="card-body">
+        <div class="field-grid">
+          <div class="field"><label for="critical-result">All critical assertions</label><input id="critical-result" name="c5.criticalResult" placeholder="pass / fail / incomplete"></div>
+          <div class="field"><label for="regression-result">Critical regression check</label><input id="regression-result" name="c5.regressionResult" placeholder="none / found / incomplete"></div>
+          <div class="field"><label for="operational-evidence">Observed operational evidence</label><input id="operational-evidence" name="c5.operationalEvidence" placeholder="sample count, latency range, tokens, cost source or unknown"></div>
+          <div class="field"><label for="operational-result">Relevant operational budget</label><input id="operational-result" name="c5.operationalResult" placeholder="pass / fail / insufficient evidence"></div>
+          <div class="field"><label for="authorization-status">Separate T02/T03 authorization status</label><select id="authorization-status" name="c5.authorizationStatus"><option value="">Choose inspected status</option><option value="proven">Proven</option><option value="failed">Failed</option><option value="not-tested">Not tested</option><option value="partial">Partial or mixed result</option></select></div>
+          <div class="field"><label for="authorization-evidence">Authorization evidence reference</label><input id="authorization-evidence" name="c5.authorizationEvidence" placeholder="T02/T03 run IDs and enforcement point"></div>
+          <div class="field"><label for="own-decision">Own-candidate requested decision</label><select id="own-decision" name="c5.ownDecision"><option value="">Choose after evidence review</option><option>release</option><option>do not release</option><option>insufficient evidence</option></select></div>
+          <div class="field field--wide"><p class="field-label">Computed evidence outcome</p><p class="status decision-status" data-decision-status aria-live="polite">No own-candidate decision recorded.</p><p>A release choice becomes insufficient evidence unless every rule above passes. Passing 8+4 never proves authorization, and this consistency check never proves the underlying run is genuine.</p></div>
+          <div class="field"><label for="c5-reference-decision">Reference-candidate decision</label><select id="c5-reference-decision" name="c5.referenceDecision"><option value="">Not assessed</option><option>release</option><option>do not release</option><option>insufficient evidence</option></select></div>
+          <div class="field"><label for="rollback">Chosen version and rollback</label><input id="rollback" name="c5.rollback"></div>
+          <div class="field"><label for="pilot-owner">Pilot owner</label><input id="pilot-owner" name="c5.pilotOwner"></div>
+          <div class="field"><label for="next-gap">Next evidence gap</label><input id="next-gap" name="c5.nextEvidenceGap"></div>
+          <div class="field field--wide"><label for="decision-limit">Decision rationale and limitations</label><textarea id="decision-limit" name="c5.limitation"></textarea></div>
+        </div>
+      </div>
+</article>
+</section>
+<section class="chapter" id="ch-privacy"><h2 class="chapter-label">Data boundary</h2>
+
+<article class="card" id="card-privacy">
+  <div class="slide-content"><h2 class="slide-title">Record only synthetic evidence.</h2></div>
+  <h3 class="card-head">
+    <button type="button" class="card-toggle" aria-expanded="false">
+      <span class="card-num" aria-hidden="true"></span>
+      <span class="card-titles"><span class="card-title">Keep secrets and real data out</span></span>
+      <span class="card-mark" aria-hidden="true"></span>
+    </button>
+  </h3>
+  <div class="card-body" id="privacy">
+      <p class="section-label">Boundary</p>
+      <h4 id="privacy-heading">Keep secrets and real data out</h4>
+      <ul>
+        <li>Enter synthetic resource names, aliases, IDs, hashes, and sanitized excerpts only.</li>
+        <li>Do not paste passwords, tokens, connection strings, patient data, prescriptions, or real inventory.</li>
+        <li>Export and import use local browser APIs. No network request or executable imported markup is required.</li>
+        <li>Reset clears only this page's local fields. It does not delete agents, knowledge bases, runs, or cloud resources.</li>
+      </ul>
+    </div>
+</article>
+</section>
+</form></main>
+<section class="takeaway" id="closing"><p>Keep evidence subjects separate and missing proof visible; a worksheet consistency check is not cloud validation.</p>
+<div class="slide-content slide-content--end"><h2 class="slide-title">Missing proof<br><em>stays visible.</em></h2></div>
+</section>
+<footer class="doc-footer">Microsoft Foundry One-Day Workshop</footer>
+</div>
+</body>
+</html>

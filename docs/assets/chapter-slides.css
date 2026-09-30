@@ -1,0 +1,45 @@
+/* Workshop rhythm is metadata, separate from the canonical presentation surface. */
+.slide[data-rhythm]::after {
+  content: attr(data-rhythm);
+  position: absolute;
+  bottom: 20px;
+  left: 72px;
+  color: var(--accent);
+  font-size: 17px;
+  font-weight: 620;
+  letter-spacing: 0.08em;
+}
+
+@media screen and (max-width: 1279px) {
+  html:not(.js) .slide[data-rhythm]::after {
+    position: static;
+    align-self: flex-start;
+    flex: none;
+    margin-top: 24px;
+  }
+}
+
+/* Navigation-only catalog; never the runtime's dialog.deck-index. */
+ul.deck-index {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+ul.deck-index a {
+  display: block;
+  height: 100%;
+  padding: 22px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-left: 5px solid var(--accent);
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+ul.deck-index strong,
+ul.deck-index span { display: block; }
+ul.deck-index strong { font-size: 22px; }
+ul.deck-index span { color: var(--text-muted); font-size: 17px; }

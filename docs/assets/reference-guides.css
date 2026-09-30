@@ -1,0 +1,98 @@
+/* Reading-only comparison tables and the native, non-persistent pilot worksheet.
+   Article structure, themes, controls and slides use the canonical runtime. */
+:root:not([data-view="slides"]) .card-body .table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  margin-block: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+:root:not([data-view="slides"]) .card-body .table-wrap table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+:root:not([data-view="slides"]) .card-body .table-wrap caption {
+  text-align: left;
+  padding: 12px 16px;
+  color: var(--text-muted);
+  background: var(--surface-2);
+}
+
+:root:not([data-view="slides"]) .card-body .table-wrap :is(th, td) {
+  padding: 12px 16px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+  overflow-wrap: anywhere;
+  min-width: 110px;
+}
+
+:root:not([data-view="slides"]) .card-body .table-wrap th {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+:root:not([data-view="slides"]) .card-body .rg-status {
+  display: inline-block;
+  padding: 3px 8px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  background: var(--accent-soft);
+  font-size: 0.8rem;
+}
+
+:root:not([data-view="slides"]) .card-body .rg-status--check {
+  border-style: dashed;
+}
+
+:root:not([data-view="slides"]) .card-body .rg-field {
+  margin-block: 24px;
+}
+
+:root:not([data-view="slides"]) .card-body .rg-field__hint {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+:root:not([data-view="slides"]) .card-body .rg-field__space {
+  display: block;
+  min-height: 4rem;
+  padding: 12px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+:root:not([data-view="slides"]) .card-body .rg-field__space--tall {
+  min-height: 6rem;
+}
+
+:root:not([data-view="slides"]) .card-body .rg-field__space:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+@media print {
+  :root:not([data-view="slides"]) .card-body .table-wrap {
+    overflow: visible;
+  }
+  :root:not([data-view="slides"]) .card-body .table-wrap :is(th, td) {
+    min-width: 0;
+  }
+  :root:not([data-view="slides"]) .card-body .rg-field {
+    break-inside: avoid;
+  }
+  :root:not([data-view="slides"]) .card-body .rg-field__space {
+    height: auto;
+    overflow: visible;
+  }
+}

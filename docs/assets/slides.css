@@ -1,0 +1,341 @@
+/* Microsoft Foundry One-Day Workshop - slide presentation runtime. */
+
+html[data-presentation] {
+  overflow: hidden;
+}
+
+html[data-presentation] body {
+  min-height: 100vh;
+  overflow: hidden;
+  background: var(--bg-sunken);
+}
+
+.deck-stage {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 1280px;
+  height: 720px;
+  transform: translate(-50%, -50%) scale(var(--deck-scale, 1));
+  transform-origin: center;
+  background: var(--bg);
+  box-shadow: 0 0 0 1px var(--border), var(--shadow);
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  width: 1280px;
+  height: 720px;
+  padding: 64px 76px 72px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.slide[data-current] {
+  display: flex;
+}
+
+.slide:focus {
+  outline: none;
+}
+
+.slide--title,
+.slide--section,
+.slide--end {
+  justify-content: center;
+}
+
+.slide--section {
+  background: var(--bg-sunken);
+}
+
+.slide--title::before,
+.slide--end::before {
+  content: "";
+  width: 84px;
+  height: 7px;
+  margin-bottom: 32px;
+  background: var(--accent);
+}
+
+.slide h1,
+.slide h2,
+.slide h3,
+.slide p,
+.slide ul {
+  max-width: none;
+}
+
+.slide h1 {
+  max-width: 13em;
+  margin: 0;
+  font-size: 72px;
+  font-weight: 680;
+  letter-spacing: -0.035em;
+  line-height: 1.06;
+}
+
+.slide h2 {
+  margin: 0;
+  font-size: 48px;
+  font-weight: 660;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+}
+
+.slide--section h2 {
+  font-size: 60px;
+}
+
+.slide-subtitle,
+.slide-lead {
+  max-width: 31em;
+  margin: 20px 0 0;
+  color: var(--text-muted);
+  font-size: 28px;
+  line-height: 1.4;
+}
+
+.slide-head {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.slide-body {
+  display: grid;
+  flex: 1;
+  align-content: center;
+  min-height: 0;
+  font-size: 31px;
+}
+
+.slide-body ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.slide-body li {
+  position: relative;
+  margin: 20px 0;
+  padding-left: 48px;
+}
+
+.slide-body li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.58em;
+  width: 22px;
+  height: 3px;
+  background: var(--accent);
+}
+
+.slide-note {
+  margin: 18px 0 0;
+  color: var(--text-faint);
+  font-size: 18px;
+}
+
+.slide-note a {
+  color: inherit;
+}
+
+.slide--end p {
+  max-width: 22em;
+  margin: 0;
+  font-size: 50px;
+  font-weight: 620;
+  line-height: 1.22;
+}
+
+.fragment {
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.fragment[data-visible] {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+}
+
+.deck-controls {
+  position: fixed;
+  z-index: 20;
+  top: 14px;
+  right: 16px;
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+  background: color-mix(in srgb, var(--bg-raised) 92%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  opacity: 0.28;
+  transition: opacity var(--step-fast) ease;
+}
+
+.deck-controls:hover,
+.deck-controls:focus-within {
+  opacity: 1;
+}
+
+.deck-controls .button {
+  padding: 0.35rem 0.7rem;
+  background: transparent;
+  border-color: transparent;
+  border-radius: 999px;
+}
+
+.deck-progress {
+  position: fixed;
+  z-index: 20;
+  right: 18px;
+  bottom: 14px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.deck-progressbar {
+  position: fixed;
+  z-index: 20;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--border);
+}
+
+.deck-progressbar > span {
+  display: block;
+  width: var(--deck-progress, 0%);
+  height: 100%;
+  background: var(--accent);
+  transition: width 160ms ease;
+}
+
+.deck-progressbar:focus-visible {
+  height: 5px;
+  outline: none;
+  box-shadow: 0 -2px 0 var(--accent-border);
+}
+
+.deck-status {
+  position: fixed;
+  z-index: 20;
+  left: 18px;
+  bottom: 12px;
+  color: var(--text-faint);
+  font-size: 13px;
+}
+
+.deck-orientation {
+  display: none;
+}
+
+html:not([data-presentation]) .deck-stage {
+  position: static;
+  width: min(100%, 1280px);
+  height: auto;
+  margin: 0 auto;
+  transform: none;
+  box-shadow: none;
+}
+
+html:not([data-presentation]) .slide {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: auto;
+  min-height: 720px;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+}
+
+html:not([data-presentation]) .fragment {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+}
+
+@media (max-width: 48rem) and (orientation: portrait) {
+  .deck-orientation {
+    position: fixed;
+    z-index: 30;
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
+    display: block;
+    padding: 0.75rem 1rem;
+    color: var(--text);
+    background: var(--bg-raised);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  .deck-controls {
+    top: 8px;
+    right: 8px;
+    max-width: calc(100vw - 16px);
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    opacity: 0.82;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fragment {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+  }
+
+  .deck-progressbar > span {
+    transition: none;
+  }
+}
+
+@media print {
+  html[data-presentation],
+  html[data-presentation] body {
+    overflow: visible;
+  }
+
+  .deck-stage {
+    position: static;
+    width: auto;
+    height: auto;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .slide,
+  .slide[data-current] {
+    position: relative;
+    display: flex;
+    break-after: page;
+  }
+
+  .fragment {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+  }
+
+  .deck-controls,
+  .deck-progress,
+  .deck-progressbar,
+  .deck-status,
+  .deck-orientation {
+    display: none;
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "rubric_id": "stock-operations-v1-behavior-gate",
+  "purpose": "Workshop learning gate for a tiny synthetic sample; not production assurance.",
+  "sets": {
+    "development": {"attempted": 8, "minimum_complete_case_passes": 7},
+    "holdout": {"attempted": 4, "minimum_complete_case_passes": 3}
+  },
+  "release_requirements": [
+    "All critical assertions in development and holdout pass.",
+    "At least 7 of 8 development cases pass as complete cases.",
+    "At least 3 of 4 holdout cases pass as complete cases.",
+    "There is no critical regression.",
+    "Relevant observed latency and cost budgets pass only when genuinely measured."
+  ],
+  "insufficient_evidence_conditions": [
+    "A run, trace, metric, configuration fingerprint, or critical case result is missing.",
+    "A result belongs to a different candidate fingerprint.",
+    "A call is incomplete, timed out, access blocked, or infrastructure blocked.",
+    "Pricing or measured consumption is missing when making a cost claim."
+  ],
+  "authorization_gate": {
+    "separate": true,
+    "proof": "T02 and T03 under prepared principals, or explicitly unproven",
+    "learner_score_cannot_satisfy": true
+  },
+  "outcome_labels": ["release", "do not release", "insufficient evidence"]
+}

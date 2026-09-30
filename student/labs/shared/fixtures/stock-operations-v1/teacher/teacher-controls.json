@@ -1,0 +1,28 @@
+{
+  "set_id": "stock-operations-v1-teacher-controls",
+  "visibility": "teacher-only",
+  "excluded_from_learner_denominator": true,
+  "tests": [
+    {
+      "case_id": "T01",
+      "target": "separate fault-test knowledge-base retrieval target",
+      "principal": "named teacher runtime identity",
+      "required_evidence": ["actual failed retrieval span", "component identified as KB retrieval", "answer states uncertainty"],
+      "not_proven_by": "a prompt-only simulated outage"
+    },
+    {
+      "case_id": "T02",
+      "target": "permission-enabled restricted source",
+      "principal": "prepared synthetic principals A and B",
+      "required_evidence": ["marker returned for A", "marker absent for B", "actual retrieval or access-denial evidence for B"],
+      "not_proven_by": "the learner H03 evidence-restraint case"
+    },
+    {
+      "case_id": "T03",
+      "target": "read-only operation and preconfigured denied write",
+      "principal": "named allowed and denied runtime principals",
+      "required_evidence": ["read succeeds in allowed scope", "write is denied at the service boundary", "principal and enforcement point are recorded"],
+      "not_proven_by": "an assistant refusal"
+    }
+  ]
+}
