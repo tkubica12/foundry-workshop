@@ -60,6 +60,7 @@ uv sync --project student\labs\mcp-services --frozen
 Copy-Item student\labs\mcp-services\.env.example student\labs\mcp-services\.env
 # Set MCP_API_KEY in the ignored .env using your local editor.
 student\labs\mcp-services\.venv\Scripts\python.exe student\labs\mcp-services\scripts\test_local.py
+student\labs\mcp-services\.venv\Scripts\python.exe student\labs\mcp-services\scripts\test_azure.py
 ```
 
 Do not overwrite an existing `.env`. The dependency index is explicitly the
@@ -132,6 +133,10 @@ version conflicts, notes, all lifecycle branches and error paths.
 It creates isolated test records and removes them in `finally`; it never
 modifies seeded cases. Run one verifier at a time without concurrent lab
 mutations because it also checks exact before/after totals.
+The verifier disables HTTP keepalive reuse because Express may retire a
+connection during reset/idle lifecycle changes. It does not retry mutations
+with an uncertain outcome. A transport failure exits nonzero; inspect the
+reported record IDs and reset before starting a fresh journey if necessary.
 
 ## Reset, recovery and cleanup
 
@@ -146,12 +151,18 @@ owned apps and their owned Express environment, refuses unrelated apps in that
 environment, and **retains the resource group and GHCR packages**.
 Inspect/remove the empty resource group separately only with authorization.
 Always pass the original subscription/group, not a changed CLI default.
+To prove reset rather than just health, run
+`student\labs\mcp-services\.venv\Scripts\python.exe student\labs\mcp-services\scripts\verify_reset.py --confirm`.
+This creates a sentinel in each service, performs the documented reset, checks
+both disappear and the exact 120/90 seed counts return, then repeats every
+remote tool journey. Do not run it during an active exercise.
 
 | Symptom | Action |
 | --- | --- |
 | Anonymous GHCR manifest denied | Make both exact packages public; rerun before deployment. |
 | ARM 403 | Check the selected subscription and operator role; do not broaden permissions automatically. |
 | Provisioning/image-pull failure | Inspect the exact named resource and Express log stream; preserve the printed provider correlation ID. |
+| `az containerapp logs` fails with `eventStreamEndpoint` | The installed CLI assumes standard Container Apps. Use the Express management experience at https://containerapps.azure.com/ for its per-container log stream. |
 | Transport timeout during a mutation | Inspect cloud state before retrying; the operation may already have succeeded. |
 | `.operation.lock` exists | Read its PID, verify no operator is active and inspect the exact resource state. Remove only that marker after recovery, then repeat the same deploy command. |
 | MCP 401 | Check the local key matches Azure secret. Rotate via `.env` and repeat deploy; do not print either secret. |

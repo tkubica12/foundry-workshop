@@ -12,6 +12,8 @@ from uuid import uuid4
 
 from dotenv import dotenv_values
 from fastmcp import Client
+from fastmcp.client.transports import StreamableHttpTransport
+import httpx2
 
 ROOT = Path(__file__).resolve().parents[1]
 PARTNER_TOOLS = {"get_partner", "list_partners", "search_partners", "create_partner", "put_partner", "delete_partner"}
@@ -23,6 +25,16 @@ COMPLAINT_TOOLS = {"get_complaint", "list_complaints", "search_complaints", "cre
 def require(condition, message):
     if not condition:
         raise AssertionError(message)
+
+
+def fresh_http_client(**kwargs):
+    # Express can retire an HTTP connection during stop/start or idle scaling.
+    return httpx2.AsyncClient(**kwargs, limits=httpx2.Limits(max_keepalive_connections=0))
+
+
+def mcp_client(url, key, mode="auto"):
+    transport = StreamableHttpTransport(url, auth=key, httpx_client_factory=fresh_http_client)
+    return Client(transport, timeout=60, init_timeout=90, mode=mode)
 
 
 def http_checks(url: str):
@@ -43,7 +55,11 @@ def http_checks(url: str):
 
 
 async def call(client, name, arguments=None):
-    result = await client.call_tool(name, arguments or {})
+    try:
+        result = await client.call_tool(name, arguments or {})
+    except httpx2.TransportError:
+        print(f"Transport failure in {name}; mutation outcome may be uncertain. Inspect records before retrying.", file=sys.stderr)
+        raise
     if result.structured_content is not None:
         return result.structured_content
     return json.loads(result.content[0].text)
@@ -71,8 +87,7 @@ async def all_pages(client, tool):
 
 async def journey(partner_url, complaint_url, key, mode="auto"):
     suffix = uuid4().hex[:12]
-    async with Client(partner_url, auth=key, timeout=60, init_timeout=90, mode=mode) as pc, \
-            Client(complaint_url, auth=key, timeout=60, init_timeout=90, mode=mode) as cc:
+    async with mcp_client(partner_url, key, mode) as pc, mcp_client(complaint_url, key, mode) as cc:
         require({t.name for t in await pc.list_tools()} == PARTNER_TOOLS, "Partner discovery differs")
         require({t.name for t in await cc.list_tools()} == COMPLAINT_TOOLS, "Complaint discovery differs")
         if mode == "legacy":
