@@ -1,0 +1,6 @@
+*
+!requirements.lock
+!services
+!services/*.py
+!Dockerfile.partners
+!Dockerfile.complaints

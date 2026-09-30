@@ -1,0 +1,69 @@
+name: Publish workshop MCP images
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - student/labs/mcp-services/**
+      - .github/workflows/publish-mcp.yml
+permissions:
+  contents: read
+concurrency:
+  group: publish-workshop-mcp
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.13.15'
+      - name: Install locked dependencies from approved feed
+        working-directory: student/labs/mcp-services
+        run: python -m pip install --require-hashes --index-url https://packagefeedproxy.microsoft.io/pypi/simple/ -r requirements.lock
+      - name: Test both HTTP services
+        working-directory: student/labs/mcp-services
+        run: python scripts/test_local.py
+      - name: Build, test and publish separate images
+        working-directory: student/labs/mcp-services
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          owner="${OWNER,,}"
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$OWNER" --password-stdin
+          trap 'docker logout ghcr.io >/dev/null; docker rm -f mcp-test-partners mcp-test-complaints >/dev/null 2>&1 || true' EXIT
+          for service in partners complaints; do
+            image="ghcr.io/$owner/foundry-workshop-mcp-$service"
+            docker build --label org.opencontainers.image.source="https://github.com/${{ github.repository }}" \
+              --label org.opencontainers.image.revision="$GITHUB_SHA" \
+              -f "Dockerfile.$service" -t "$image:sha-$GITHUB_SHA" -t "$image:latest" .
+          done
+          export MCP_API_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+          echo "::add-mask::$MCP_API_KEY"
+          docker run -d --name mcp-test-partners -e MCP_API_KEY -p 127.0.0.1:8001:8000 "ghcr.io/$owner/foundry-workshop-mcp-partners:sha-$GITHUB_SHA"
+          docker run -d --name mcp-test-complaints -e MCP_API_KEY -p 127.0.0.1:8002:8000 "ghcr.io/$owner/foundry-workshop-mcp-complaints:sha-$GITHUB_SHA"
+          python - <<'PY'
+          import time, urllib.request
+          for port in (8001, 8002):
+              for attempt in range(60):
+                  try:
+                      urllib.request.urlopen(f"http://127.0.0.1:{port}/healthz", timeout=2).close()
+                      break
+                  except (OSError, TimeoutError):
+                      time.sleep(1)
+              else:
+                  raise RuntimeError(f"Container on {port} not healthy")
+          PY
+          python scripts/verify.py --partners http://127.0.0.1:8001/mcp --complaints http://127.0.0.1:8002/mcp
+          for service in partners complaints; do
+            image="ghcr.io/$owner/foundry-workshop-mcp-$service"
+            docker push "$image:sha-$GITHUB_SHA"
+            docker push "$image:latest"
+          done
+          printf 'Published separate partner and complaint images tagged sha-%s. Anonymous pulls require public package visibility.\n' "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"

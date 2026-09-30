@@ -1,0 +1,10 @@
+FROM python:3.13.15-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /app
+COPY requirements.lock ./
+RUN python -m pip install --no-cache-dir --require-hashes --index-url https://packagefeedproxy.microsoft.io/pypi/simple/ -r requirements.lock \
+    && useradd --uid 10001 --create-home mcp
+COPY services/__init__.py services/common.py services/models.py services/fixtures.py services/complaints.py ./services/
+USER 10001
+EXPOSE 8000
+CMD ["python", "-m", "uvicorn", "services.complaints:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-access-log"]

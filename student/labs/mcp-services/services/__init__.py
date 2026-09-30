@@ -1,0 +1,1 @@
+"""Synthetic workshop MCP backends."""
