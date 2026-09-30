@@ -6,8 +6,10 @@
 
 The labs-first publication decision remains accepted. Archive distribution and
 private evidence references and screenshot-preservation requirements are superseded by
-[ADR 0006](0006-customer-neutral-public-baseline.md). The public clone contains
-only current source, not retired material or original Git history.
+[ADR 0006](0006-customer-neutral-public-baseline.md). ADR 0007 supersedes only
+the retention of unpublished fixtures, the optional passport and teacher-demo
+source. The labs-first publication decision remains active. The public clone
+contains only current source, not retired material or original Git history.
 
 ## Context
 
@@ -98,8 +100,9 @@ dependencies or demo automation change as part of this publication decision.
 
 The archive operation compares source and destination SHA-256 hashes and verifies
 Git ignore coverage. Active tests cover HTML structure, local links, no external
-runtime dependencies, light/dark layouts, keyboard navigation, no-JavaScript reading,
-isolated exports and existing passport state behavior.
+runtime dependencies, light/dark layouts, keyboard navigation, no-JavaScript
+reading and isolated exports. Passport state tests were removed with the
+optional passport under ADR 0007.
 
 Current run results and remaining integration gates are recorded in
 `teacher/VALIDATION.md`. Original archive manifests and private evidence are

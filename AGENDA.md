@@ -21,7 +21,7 @@ the intended attendee identity before advertising it as ready to deliver.
 | 12:45-14:00 | 4. Connect tools | Planned lab; not published. |
 | 14:00-15:00 | 5. Ground with knowledge | Planned lab; not published. |
 | 15:00-15:15 | Break | |
-| 15:15-16:15 | 6. Add a hosted specialist with LangGraph | Planned lab; teacher demo source is retained for separate qualification. |
+| 15:15-16:15 | 6. Add a hosted specialist with LangGraph | Planned lab; not published. |
 | 16:15-17:00 | Closing: operating and adopting agents | Architecture synthesis and planned Autopilot demonstration; qualify separately. |
 
 Teams integration is optional, not a prerequisite or promised hands-on outcome.

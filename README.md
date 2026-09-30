@@ -10,13 +10,11 @@ qualified delivery package; only Labs 2 and 3 are currently published.
 - [Workshop labs](docs/index.html)
 - [Lab 2: Build an agent](docs/guides/chapter-2-build-agent.html)
 - [Lab 3: Evaluate and improve](docs/guides/chapter-3-evaluate-agent.html)
-- [Learning passport](docs/guides/learning-passport.html)
 - [Workshop sequence](AGENDA.md)
 
 ## Delivery and maintenance
 
 - [Active roadmap](PLAN.md)
-- [Teacher demonstrations](teacher/demos/)
 - [Local validation and live qualification limits](teacher/VALIDATION.md)
 - [Repository instructions](AGENTS.md) · [Architecture decisions](docs/adr/)
 

@@ -17,8 +17,7 @@ continuing development here.
 4. Turn the hosted-specialist experience into a timeboxed lab with prepared infrastructure.
 5. Qualify the opening and closing demonstrations, then rehearse the complete day.
 
-Retain fictional pickup and stock operations as interchangeable teaching examples,
-not a customer-specific solution or a pharmacy workflow. Do not add real customer
+Keep published examples fictional and customer-neutral. Do not add real customer
 data, named organizations, production endpoints or copied operational evidence.
 
 - [Public sequence](AGENDA.md)

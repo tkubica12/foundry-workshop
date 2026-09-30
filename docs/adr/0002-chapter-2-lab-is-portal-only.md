@@ -1,10 +1,15 @@
 # 0002. Keep the build lab portal-only and the scored harness teacher-only
 
-- **Status:** Accepted
+- **Status:** Accepted; teacher-harness retention superseded by
+  [0007](0007-focus-repository-on-published-labs.md)
 - **Date:** 2026-09-30
 - **Deciders:** Workshop content owner
 - **Relates to:** [0001](0001-chapter-2-student-lab-scope.md),
   [0006](0006-customer-neutral-public-baseline.md)
+
+ADR 0007 removed the optional teacher harness from this repository. The
+portal-only attendee decision remains the current Lab 2 design; references to
+the harness below describe the historical implementation.
 
 ## Context
 
@@ -42,8 +47,9 @@ the agent forward into a more deliberate evaluation.
 ## Decision
 
 Choose Option C. The published build guide contains no shell or installation
-step. Retain `teacher/demos/build-host-agent/harness/` for an optional teacher
-segment and document its separate contract, state journal and cleanup scope.
+step. At the time of this decision, the repository retained a teacher harness
+for an optional segment with a separate contract, state journal and cleanup
+scope. ADR 0007 later removed that unpublished implementation.
 
 State the limitation clearly: the first comparison is a smoke test, not a
 production evaluation or a guarantee that one model always outperforms another.
@@ -67,5 +73,6 @@ without making attendee completion depend on a runtime.
 ## Validation
 
 Local checks exercise guide structure, synthetic prompts, copy controls and
-media. The guarded harness tests cover mocked scoring and cleanup boundaries.
-No local result certifies current portal permissions or live workshop timing.
+media. Historical guarded-harness tests covered mocked scoring and cleanup
+boundaries before ADR 0007 removed that implementation. No local result
+certifies current portal permissions or live workshop timing.

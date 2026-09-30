@@ -20,7 +20,6 @@ EXPORT_PATHS = {
     Path("index.html"),
     Path("guides/chapter-2-build-agent.html"),
     Path("guides/chapter-3-evaluate-agent.html"),
-    Path("guides/learning-passport.html"),
 }
 
 

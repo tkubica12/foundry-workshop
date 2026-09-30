@@ -20,7 +20,6 @@ EVIDENCE = REPO_ROOT / "evidence" / "ui-navigation"
 ENTRY_POINTS = {
     "guides/chapter-2-build-agent.html": "Lab 2: Build an agent",
     "guides/chapter-3-evaluate-agent.html": "Lab 3: Evaluate and improve",
-    "guides/learning-passport.html": "Learning passport",
 }
 
 
@@ -63,7 +62,7 @@ def test_index_publishes_exactly_the_implemented_entry_points():
     assert links == set(ENTRY_POINTS)
     for href in links:
         local_target(DOCS / "index.html", href)
-    assert {"labs", "passport", "up-next"} <= index.ids
+    assert {"labs", "up-next"} <= index.ids
     assert set(path.relative_to(DOCS).as_posix() for path in DOCS.rglob("*.html")) == {
         "index.html", *ENTRY_POINTS,
     }
@@ -115,7 +114,6 @@ def test_all_published_local_links_and_assets_are_served(site, browser):
         for private_path in (
             ".git/config", ".env", ".workshop/chapter-2/state.json",
             ".workshop/archive/2026-09-18-labs-first/PLAN.md",
-            "teacher/demos/build-host-agent/.live-demo.psd1",
             "slides/index.html", "guides/evaluation-and-operations.html",
         ):
             assert context.request.get(urljoin(site, private_path)).status == 404
@@ -161,10 +159,6 @@ def test_actual_index_to_every_active_guide_journey(site, browser, theme, width,
             link.click()
             expect(page).to_have_url(urljoin(site, href))
             expect(page.locator("h1")).to_be_visible()
-            if href == "guides/learning-passport.html":
-                page.locator('[name="meta.seatLabel"]').fill("synthetic-seat-07")
-                page.reload()
-                expect(page.locator('[name="meta.seatLabel"]')).to_have_value("synthetic-seat-07")
             page.go_back()
             expect(page).to_have_url(site)
         assert not external, f"external runtime requests: {external}"

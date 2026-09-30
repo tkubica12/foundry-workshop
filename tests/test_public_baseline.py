@@ -71,5 +71,5 @@ def test_one_day_scope_and_honest_publication_boundary():
     assert "handoffs" not in readme
 
 
-def test_text_line_endings_are_explicit_for_reproducible_fixtures():
+def test_text_line_endings_are_explicit_for_reproducible_lab_inputs():
     assert (ROOT / ".gitattributes").read_text(encoding="utf-8").strip() == "* text=auto eol=lf"

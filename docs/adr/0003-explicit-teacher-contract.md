@@ -1,8 +1,12 @@
 # 0003. Resolve the teacher environment from an explicit nonsecret contract
 
-- **Status:** Accepted
+- **Status:** Superseded by [0007](0007-focus-repository-on-published-labs.md)
 - **Date:** 2026-09-16
 - **Deciders:** workshop engineering, workshop delivery coordinator
+
+ADR 0007 removed this teacher-demo implementation from the published-labs
+repository. Paths below identify historical source locations and are not
+expected to resolve in the current tree.
 
 ## Context
 
@@ -15,10 +19,11 @@ The 2026-09-15 read-only feasibility inspection found that this command loads
 -reconfigure` and ACL work. A command named `status` therefore crossed secret
 and infrastructure boundaries before the demo's requested operation began.
 
-The accepted implementation now makes that dependency explicit. The source of
-truth is [`demo.py`](../../teacher/demos/build-host-agent/scripts/demo.py)
-(`build_parser`, `_contract_for`, `parse_contract`, `load_contract`) and the
-[operator contract](../../teacher/demos/build-host-agent/OPERATOR.md).
+The accepted implementation made that dependency explicit. Its historical
+source of truth was
+`teacher/demos/build-host-agent/scripts/demo.py` (`build_parser`,
+`_contract_for`, `parse_contract`, `load_contract`) together with
+`teacher/demos/build-host-agent/OPERATOR.md`.
 The external inspection explains the legacy risk; it is not evidence that every
 future `labctl` version has identical behavior.
 
@@ -102,7 +107,7 @@ The optional scored harness uses a different schema and `--contract`, not
 `--contract-file`. An explicit harness file uses only its own values and explicit
 CLI overrides; absent or incomplete files never fall back to a machine seat file.
 Legacy no-file harness resolution remains documented in
-[`seat.py`](../../teacher/demos/build-host-agent/harness/seat.py).
+the historical `teacher/demos/build-host-agent/harness/seat.py`.
 
 ## Consequences
 
@@ -140,8 +145,8 @@ An independent lifecycle/operator recheck passed those cases plus eight reviewer
 probes (273 total), closing the explicit-file fallback and required-value
 validation findings alongside the related lifecycle repairs.
 
-The portable command and current integration results are recorded in
-[`teacher/VALIDATION.md`](../../teacher/VALIDATION.md). Local evidence covers
-parsing, isolation and mocked lifecycle behavior. It does not prove current
-teacher deployment, hosted transport, routing, trace propagation, policy
-attribution, attendee sign-in, licensing or room-concurrency readiness.
+The portable command and integration results above are historical evidence for
+the removed implementation and are not distributed in this repository. They
+covered parsing, isolation and mocked lifecycle behavior, not current teacher
+deployment, hosted transport, routing, trace propagation, policy attribution,
+attendee sign-in, licensing or room-concurrency readiness.
