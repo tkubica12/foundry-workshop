@@ -15,8 +15,27 @@ eligibility. The seven existing Azure safety mocks also passed.
 An independent domain/implementation/Educator review inspected the actual
 backend, verifier, operator contract and session Canvas examples, checked all
 20 model identities/families and 120/90 fixture records, and reported no
-blocking or material finding. This local review does not by itself establish
-the outcome of a subsequent cloud rollout.
+blocking or material finding.
+
+[Music-domain publication run](https://github.com/tkubica12/foundry-workshop/actions/runs/36752675501)
+passed both clean-process HTTP tests and both actual Linux Docker image
+journeys, then published and anonymously verified immutable tags for source
+commit `2b6f70655ff40f3835d6a33b88631385ad22a947`.
+Those exact images were deployed to the existing Express applications without
+changing their URLs, authentication, registry access or 0/1 scaling settings.
+The full workstation remote verifier passed modern and legacy journeys in
+97.3 seconds. Reset qualification also passed: generated sentinel writes
+disappeared, exact 120/90 fixture counts returned and both complete remote
+journeys passed again.
+
+The refreshed session-only Canvas loaded the new live schemas and music
+examples. A real Playwright browser journey called **all 16 MCP tools** through
+the UI, checked musical product/family/serial/transaction fields, chained
+record versions, and removed its generated records. Invalid JSON and schema
+values, mutation confirmation, CSRF rejection, light/dark/mobile layout and
+keyboard focus passed. Screenshots remain private session evidence, not
+published assets. The Canvas is not an attendee guide or a committed runtime
+dependency.
 
 ## Original technical qualification
 
