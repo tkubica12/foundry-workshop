@@ -54,6 +54,26 @@ def test_core_has_scoped_write_and_exact_trace_checkpoints():
         assert required in source
 
 
+def test_server_registration_is_required_before_toolbox_curation():
+    source = GUIDE.read_text(encoding="utf-8")
+    assert "The servers are not registered in your project in advance" in source
+    assert 'href="#server-registration"' in source
+    assert "Register both servers (required)" in source
+    assert "Optional: register a server" not in source
+    assert source.index('id="server-registration"') < source.index("Create toolbox")
+    for required in (
+        "lab04-S07-partners", "lab04-S07-complaints", "Key-based",
+        "Authorization: Bearer &lt;key supplied by the facilitator&gt;",
+        "including its angle brackets", "exactly one space",
+        "Enter the key only in the credential field",
+        "Both named server connections appear",
+        "Both server URLs must end with <code>/mcp</code>",
+        "https://partners.example.com/mcp",
+        "append <code>/mcp</code> twice",
+    ):
+        assert required in source
+
+
 @pytest.fixture
 def operator_modules(monkeypatch):
     monkeypatch.setattr(sys, "path", sys.path.copy())
@@ -149,6 +169,13 @@ def test_reading_controls_copy_deep_links_and_no_overflow(theme, width, height):
             page.goto(GUIDE.as_uri() + "#card-traces")
             expect(page.locator("#card-traces")).to_have_attribute("data-open", "")
             page.locator('[data-action="expand-all"]').click()
+            registration = page.locator("#server-registration .reveal-toggle")
+            registration.focus()
+            page.keyboard.press("Enter")
+            expect(registration).to_have_attribute("aria-expanded", "true")
+            expect(page.locator("#server-registration .reveal-body")).to_be_visible()
+            expect(page.locator("#server-registration .reveal-body")).to_contain_text(
+                "Authorization: Bearer <key supplied by the facilitator>")
             page.evaluate("""Object.defineProperty(navigator, "clipboard", {
                 configurable: true, value: {writeText: async text => {window.copied = text;}}
             })""")

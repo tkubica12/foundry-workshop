@@ -226,7 +226,7 @@ SOFTWARE. -->
   <div class="card-body">
     <ol class="steps">
       <li><p>Sign in to <a href="https://ai.azure.com">ai.azure.com</a>. Select your assigned tenant/project with <strong>New Foundry</strong> on. Open your <code>pickup-&lt;seat&gt;</code> agent from Lab 3.</p></li>
-      <li><p>Obtain the registered <strong>Partners</strong> and <strong>Complaints</strong> connection names. Check toolbox authoring, the prepared MCP-compatible model and your agent's <strong>Traces</strong> tab. The facilitator prepares identity permissions and Application Insights access.</p></li>
+      <li><p>Obtain the HTTPS <code>/mcp</code> URLs for <strong>Partners</strong> and <strong>Complaints</strong> and the access key from the facilitator. The servers are not registered in your project in advance. Complete <a href="#server-registration">Register both servers</a> before adding tools to your toolbox. Check tool registration, toolbox authoring, the prepared MCP-compatible model and your agent's <strong>Traces</strong> tab. The facilitator prepares identity permissions and Application Insights access.</p></li>
       <li><p>Keep your Lab 3 deployment if the facilitator confirms MCP/toolbox support, for example your primary <code>gpt-6.1-sol</code> or another previously deployed compatible model. Choose according to available capacity, not the example's model ID. If it is incompatible, select a prepared compatible deployment before the first tool call, save a new agent version and record the actual model ID and deployment name/version. Keep it unchanged throughout this lab; do not deploy a new model just to match an example.</p></li>
       <li><p>Save your previous agent version/instructions. Choose a unique marker such as <code>LAB04-S07-R01</code>; replace the seat/run everywhere below.</p></li>
     </ol>
@@ -242,6 +242,15 @@ SOFTWARE. -->
 <article class="card" id="card-toolbox">
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Curate seven tools</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
+    <p>First expand <strong>Register both servers</strong> below and complete the registration. This is a required step: the facilitator supplies two server URLs and a key, not preconfigured project connections. Both server URLs must end with <code>/mcp</code>, for example <code>https://partners.example.com/mcp</code>. Do not use only the server's base URL or append <code>/mcp</code> twice.</p>
+    <div class="reveal" id="server-registration"><button type="button" class="reveal-toggle" aria-expanded="false">Register both servers (required)</button><div class="reveal-body">
+      <ol class="steps">
+        <li><p>Open <strong>Build &rarr; Tools &rarr; Tools &rarr; Connect a tool &rarr; Custom &rarr; Model Context Protocol (MCP) &rarr; Create</strong>. Name the Partners connection <code>lab04-S07-partners</code>, replacing the seat. Use a unique name of at most 27 characters and paste the Partners HTTPS <code>/mcp</code> URL supplied by the facilitator.</p></li>
+        <li><p>Select <strong>Key-based</strong>. Enter credential name <code>Authorization</code> and secret value <code>Bearer &lt;key supplied by the facilitator&gt;</code>. Replace the placeholder, including its angle brackets, with the supplied key. Keep exactly one space after <code>Bearer</code>: the resulting header is <code>Authorization: Bearer &lt;key supplied by the facilitator&gt;</code>. Enter the key only in the credential field, never in chat, agent instructions or notes. Select <strong>Connect</strong>.</p></li>
+        <li><p>Repeat for Complaints with name <code>lab04-S07-complaints</code> and the Complaints HTTPS <code>/mcp</code> URL. Use the same <strong>Key-based</strong> credential name and bearer-key format.</p></li>
+      </ol>
+      <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Both named server connections appear under <strong>Configured</strong>. Registration alone does not curate or attach the servers; continue with the toolbox steps below.</p></div>
+    </div></div>
     <ol class="steps">
       <li><p>Open <strong>Build &rarr; Tools &rarr; Toolboxes &rarr; Create toolbox</strong>. Name it <code>lab04-tools-S07</code>, replacing the seat. Never reuse someone else's name.</p></li>
       <li><p>Under <strong>Included</strong>, select <strong>Add &rarr; Add tool &rarr; Configured</strong>. Select Partners, then <strong>Add tool</strong>. Repeat for Complaints. Leave <strong>Tool search</strong> off.</p></li>
@@ -251,10 +260,6 @@ SOFTWARE. -->
     <div class="code" id="complaint-allowlist"><p class="code-label">Complaints: allowed tools</p><pre><code>get_complaint,search_complaints,create_complaint,assign_complaint,add_complaint_note</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy aria-label="Copy Complaints allowlist">Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
     <p>Select <strong>Publish</strong>. Wait for <strong>v1 saved</strong>, then use <strong>Call this toolbox &rarr; Copy endpoint</strong>. Keep this toolbox unchanged during the exercise: that endpoint follows its default version.</p>
     <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Two servers, seven allowed tools, approval for every call. No deletion, partner writes or status transitions. If authoring is unavailable, use the facilitator's equivalent prepared toolbox.</p></div>
-    <div class="reveal"><button type="button" class="reveal-toggle" aria-expanded="false">Optional: register a server</button><div class="reveal-body">
-      <p>With explicit sandbox permission, open <strong>Build &rarr; Tools &rarr; Tools &rarr; Connect a tool &rarr; Custom &rarr; Model Context Protocol (MCP) &rarr; Create</strong>. Use a unique name of at most 27 characters and the supplied HTTPS <code>/mcp</code> endpoint.</p>
-      <p>Select <strong>Key-based</strong>. The facilitator enters credential name <code>Authorization</code> and its secret value: <code>Bearer</code>, a space, then the key. Select <strong>Connect</strong>. Registration alone does not curate or attach the server.</p>
-    </div></div>
   </div>
 </article>
 <article class="card" id="card-attach">
@@ -356,7 +361,7 @@ Do not change its status or add a note.</code></pre><div class="lab-copy-row"><b
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Recover only the failed checkpoint</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
     <div class="table-wrap"><table><caption>Symptom and recovery</caption><thead><tr><th>Symptom</th><th>Action</th></tr></thead><tbody>
-      <tr><td>401 / 403 / no tools</td><td>Ask the facilitator to check endpoint, stored credential, identity/audience and permissions. Never use anonymous access.</td></tr>
+      <tr><td>401 / 403 / no tools</td><td>Check both server URLs and the stored <code>Authorization</code> credential: <code>Bearer</code>, one space, then the facilitator-supplied key. For the toolbox attachment, check Microsoft Entra identity/audience and permissions with the facilitator. Never use anonymous access or paste the key into chat.</td></tr>
       <tr><td>Model error / no calls</td><td>Check your recorded deployment, saved version and attachment. For <code>unsupported_parameter</code>, ask the facilitator to check <code>reasoning.effort</code> and MCP/toolbox compatibility. Use a confirmed existing alternative if needed, save a new version and repeat the affected checks; do not deploy substitutes.</td></tr>
       <tr><td>Conflict / 429 / <code>ERR_NETWORK</code></td><td>Stop. Inspect current case/marker before continuing; get new confirmation after conflicts. Never resend a write blindly.</td></tr>
       <tr><td>Case disappeared</td><td>Use a new chat and fresh marker; never substitute a seed case.</td></tr>
