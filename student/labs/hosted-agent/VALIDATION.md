@@ -12,7 +12,7 @@ ignored `.workshop\hosted-agent`; no UI screenshots are published.
 | C03: shared tools and safety | Seven-tool live discovery passed. Two hosted instances completed individually approved reads through both services; answers matched recorded complaint and partner facts. Both rejected chains failed with `interrupt_rejected` and had no executed tool results. Offline forged-resume and write-denial checks pass; no live backend mutation was attempted. |
 | C04: telemetry | Actual hosting, graph, model and tool spans, parent links, arguments and results were queried in connected Application Insights and correlated to caller trace IDs. Native Foundry/Azure viewer journey and attendee monitoring permissions remain unqualified. |
 | C05: deployment and registry | The same public GHCR digest activated directly in two isolated Hosted Agents in Sweden Central. Both existed concurrently. No ACR was needed or created; no role or shared-resource change was made. |
-| C06: lifecycle | Live status and repeated deploy retained one version per seat. New-conversation reset, exact version cleanup, absence verification and repeated cleanup passed. Parent shells, shared resources and independent monitoring/checkpoint retention intentionally remain. |
+| C06: lifecycle | Live status and repeated deploy retained one version per seat. New-conversation reset, exact version cleanup, absence verification and repeated cleanup passed. No parent DELETE was issued; a subsequent REST investigation showed the parent can disappear after its last version is deleted. Shared resources and independent monitoring/checkpoint retention are not targeted. |
 | C07: learning and reproducibility | Independent educator, safety and source/offline reproducibility rechecks found no material issue. A fresh learner/educator reviewer executed the second prepared operator-seat journey and cleanup without a material blocker. Fresh-machine, attendee-role, native portal and room/timebox qualification remain open. |
 
 Checks on 2026-10-01: 24 isolated Python tests and 152 combined
@@ -93,8 +93,10 @@ change or shared-resource mutation was performed.
   Installed dependencies were not patched and warnings were not suppressed.
 - Exact recorded-version cleanup passed in 23.8 seconds. An independent SDK
   read returned `ResourceNotFound`; repeated cleanup reported already cleaned.
-  The agent shell and shared resources were intentionally retained. No other
-  seat was altered.
+  No parent DELETE or shared-resource cleanup was issued. Parent visibility
+  was not independently qualified in this SDK run; the later REST observation
+  supersedes the earlier assumption that an empty parent remains visible.
+  No other seat was altered.
 
 Educator assessment: the optional specialist is a coherent continuation of
 Lab 4, distinguishes checkpoint state from managed Memory, and makes execution
@@ -110,3 +112,83 @@ permissions, facilitator demonstration, room concurrency and the full
 qualify reading, discussion or portal-inspection timing. Raw responses,
 telemetry, version enumeration and correlation checks remain privately in the
 ignored seat directory; no screenshots or private identifiers are published.
+
+## Ephemeral Cloud Shell REST conversion - 2026-10-01
+
+The attendee core now uses Linux PowerShell 7 and Azure CLI `az rest` in
+storage-free ephemeral Cloud Shell. Python, its SDK and Docker are not
+attendee deployment prerequisites. The agent runtime, immutable image,
+production lock and image-publication workflow are unchanged.
+Runtime files match the image's recorded source commit
+`15c0e9cc8baf0eb2f55b2fcdb30e9e8f6194c620`.
+
+Current local evidence:
+
+- 45 dependency-free REST-client regression assertions passed, including
+  uncertain create/turn markers, ownership and digest checks, alternate-state
+  seat-lock exclusion, scoped cleanup and repeated absence, exact approvals,
+  typed NotFound handling, authentication-independent backup, native executable
+  selection and subprocess timeout.
+- All 24 isolated agent Python tests and 252 related HTML/content/navigation/
+  export/public-baseline/browser checks passed. A hidden empty recovery anchor
+  found by the browser checks was replaced with the visible section heading.
+- Canonical guide validation passed 300/300 checks at 1440x900; the
+  standalone guide passed 300/300 at 1920x1080, including offline runtime,
+  light/dark themes, reduced motion, print and no-JavaScript fallback.
+  Standalone sibling links require the workshop collection.
+- Independent Educator and destructive-safety reviews identified two material
+  source issues: locking by state filename and an unexplained image/source
+  boundary. Directory-wide locking and explicit operator source-commit
+  qualification resolved them. The scoped recheck found no blocking or
+  material issue. The final safety evidence review inspected actual hashes,
+  archive receipts and typed telemetry results without a remaining material
+  finding.
+
+Maintained-client live evidence consumed exactly two additional isolated
+deployments and ten Responses POSTs in the approved existing project. Neither
+deployment changed roles, shared resources, models, image publication or
+synthetic backend data.
+
+- Both seats passed actual CLI preflight, activation, status and repeated
+  deploy without another version POST. Each approved chain used three
+  Responses POSTs: an individual complaint read, an individual partner read
+  and the returned factual answer. Each separate rejection used two POSTs
+  and persisted `failed / interrupt_rejected`, with the expected client
+  failure exit and no executed tool result.
+- The first seat returned 398 correlated telemetry rows over five turns.
+  The independent Student live-path reviewer inspected 403 rows for the
+  second seat: hosting, graph, model, arguments/results, resolved parent
+  links and saved previous-response relationships. Duplicate instrumentation
+  spans represented two business reads, not four executions. Actual returned
+  complaint/partner facts matched the answers; rejected continuations had no
+  executed tool result.
+- Both seats created private recovery ZIPs, restored their trusted archive
+  into an empty seat directory, resumed the recorded active version, deleted
+  only that version, independently verified absence and repeated cleanup
+  without another DELETE. Final exported archives contain four matching JSON
+  receipts, no process locks or credential fields, and cleaned state.
+  Recorded remote client hashes match the maintained repository scripts.
+- Owned Cloud Shell console absence was independently verified after the
+  rehearsals. The approved ephemeral profile remains; no storage account was
+  created. File loss and agent cleanup are separate lifecycle boundaries.
+
+Real Cloud Shell testing exposed multiple `az` executable matches and the
+service's structured `not_found` error code. Both were corrected in the
+maintained client with regressions; authorization failures remain failures.
+Private terminal transport exceeded the Linux argument limit when sending a
+large prepared snapshot, and a later review terminal disconnected before
+setup. Neither attempt deployed a version or sent a Responses POST. The
+transport was changed to bounded script-file chunks, and the remaining
+independent review completed from an empty isolated checkout. These transport
+helpers are private test infrastructure, not attendee prerequisites.
+
+The independent Student/source review and the resumed live-path review found
+no blocking or material issue in the exercised core. The live rehearsals used
+prepared authorized operator credentials and an in-memory first-party terminal
+token bridge. Unpublished maintained scripts were transferred as a prepared
+source overlay; the runtime source came from the public checkout. Archive
+bytes were exported through the test transport, not the browser toolbar.
+Do not equate these tests with browser-only first login, device-code recovery,
+native upload/download controls, Foundry/Azure portal trace viewers, intended
+attendee permissions, room concurrency or the complete 45-minute learning
+timebox. Those delivery gates remain open.

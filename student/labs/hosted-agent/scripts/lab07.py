@@ -211,7 +211,7 @@ def run(args):
                 project.agents.delete_version(config["agent_name"], receipt["version"], force=True)
             receipt["status"] = "cleaned"
             save(state, receipt)
-            print("PASS: owned version deleted; agent shell, other versions, shared MCP services, toolbox, image, registry, connections and roles retained")
+            print("PASS: owned version deleted; no parent DELETE issued. Other versions and shared resources were not targeted; the last-version deletion can make the parent disappear.")
 
 
 def main():

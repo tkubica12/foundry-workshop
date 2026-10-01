@@ -53,6 +53,10 @@ different binaries. It is not selected.
 
 ## Decision
 
+Client delivery is extended by [ADR 0014](0014-ephemeral-cloud-shell-rest-lab.md):
+the attendee path uses ephemeral Cloud Shell and Azure CLI REST; the runtime
+and image decisions here remain unchanged.
+
 Use Option A. Pin dependencies resolved through the approved package feed.
 Discover the seven existing tools and reject missing or duplicate contracts.
 Require a checkpointed runtime approval before every read. Expose the shared
