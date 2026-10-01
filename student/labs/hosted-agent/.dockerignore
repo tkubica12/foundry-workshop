@@ -1,0 +1,6 @@
+*
+!requirements.lock
+!agent.py
+!system-prompt.txt
+!tests/
+!tests/**

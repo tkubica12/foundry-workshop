@@ -1,0 +1,73 @@
+name: Publish workshop Hosted Agent
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: publish-workshop-hosted-agent
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.13.15'
+      - name: Install pinned dependencies and test
+        working-directory: student/labs/hosted-agent
+        run: |
+          python -m pip install --require-hashes --index-url https://packagefeedproxy.microsoft.io/pypi/simple/ -r requirements.lock
+          python -m pip install --index-url https://packagefeedproxy.microsoft.io/pypi/simple/ pytest==9.0.2
+          python -m pytest tests
+      - name: Build, exercise Responses protocol, and publish
+        working-directory: student/labs/hosted-agent
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          image="ghcr.io/${OWNER,,}/foundry-workshop-hosted-agent"
+          docker build --platform linux/amd64 \
+            --label org.opencontainers.image.source="https://github.com/${{ github.repository }}" \
+            --label org.opencontainers.image.revision="$GITHUB_SHA" \
+            -t "$image:sha-$GITHUB_SHA" .
+          trap 'docker rm -f hosted-agent-protocol >/dev/null 2>&1 || true; docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+          docker run -d --name hosted-agent-protocol -p 127.0.0.1:8088:8088 \
+            -e LAB07_TEST_HOST=0.0.0.0 \
+            -v "$PWD/tests:/tests:ro" --entrypoint python "$image:sha-$GITHUB_SHA" /tests/protocol_fixture.py
+          if ! python tests/protocol_check.py; then
+            docker logs hosted-agent-protocol
+            exit 1
+          fi
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$OWNER" --password-stdin
+          docker push "$image:sha-$GITHUB_SHA"
+          docker logout ghcr.io
+          IMAGE="$image" python - <<'PY'
+          import json, os, urllib.request
+          image = os.environ["IMAGE"]
+          repository = image.removeprefix("ghcr.io/")
+          token_url = "https://ghcr.io/token?service=ghcr.io&scope=repository:" + repository + ":pull"
+          with urllib.request.urlopen(token_url, timeout=30) as response:
+              token = json.load(response)["token"]
+          request = urllib.request.Request(
+              f"https://ghcr.io/v2/{repository}/manifests/sha-{os.environ['GITHUB_SHA']}",
+              headers={"Authorization": "Bearer " + token, "Accept": "application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json"},
+          )
+          with urllib.request.urlopen(request, timeout=30) as response:
+              digest = response.headers["Docker-Content-Digest"]
+              manifest = json.load(response)
+          with open("image-receipt.json", "w") as stream:
+              json.dump({"image": image + "@" + digest, "commit": os.environ["GITHUB_SHA"], "anonymous_pull": True, "platform": "linux/amd64"}, stream, indent=2)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
+              summary.write(f"Published and anonymously verified `{image}@{digest}`.\nOffline protocol checks are not live Foundry qualification.\n")
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: hosted-agent-image
+          path: student/labs/hosted-agent/image-receipt.json
+          retention-days: 30

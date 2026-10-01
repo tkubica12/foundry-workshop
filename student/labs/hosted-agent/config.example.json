@@ -1,0 +1,13 @@
+{
+  "project_endpoint": "https://YOUR-RESOURCE.services.ai.azure.com/api/projects/YOUR-PROJECT",
+  "project_resource_id": "/subscriptions/YOUR-SUBSCRIPTION/resourceGroups/YOUR-GROUP/providers/Microsoft.CognitiveServices/accounts/YOUR-RESOURCE/projects/YOUR-PROJECT",
+  "agent_name": "lab07-run-s01",
+  "owner": "lab07-run",
+  "model": "YOUR-EXISTING-DEPLOYMENT",
+  "image": "ghcr.io/YOUR-OWNER/foundry-workshop-hosted-agent@sha256:YOUR-DIGEST",
+  "environment": {
+    "TOOLBOX_ENDPOINT": "https://YOUR-RESOURCE.services.ai.azure.com/api/projects/YOUR-PROJECT/toolboxes/YOUR-TOOLBOX/versions/1/mcp?api-version=v1",
+    "LAB07_RECORD_CONTENT": "true",
+    "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT": "true"
+  }
+}
