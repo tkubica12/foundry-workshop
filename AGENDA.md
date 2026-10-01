@@ -36,8 +36,13 @@ qualification gates. Lab 6 is not published.
 
 Lab 1 uses Sweden Central and per-seat deployments: one primary GPT model at
 100,000 TPM, plus Luna and GLM Flash at 50,000 TPM each. Confirm Lab 2's separate
-model, guardrail and trace prerequisites before transitioning; Lab 1 does not
-provision those capabilities. The Lab 1 timebox is a target, not a deployment
+guardrail and telemetry permissions before transitioning; connect Application
+Insights in each seat's own Lab 1 project at the start of Lab 2. Reuse the primary Sol
+and a ready Luna or GLM deployment where compatible. Model IDs in later labs
+are examples: an existing alternative is valid when capacity differs and the
+required agent, evaluator or tool capability is confirmed. Keep agent and judge
+deployments fixed within each baseline/candidate comparison. Lab 1 does not
+qualify those capabilities. The Lab 1 timebox is a target, not a deployment
 latency guarantee; Fireworks can take up to 30 minutes.
 
 [Open the labs](docs/index.html) · [Delivery roadmap](PLAN.md)

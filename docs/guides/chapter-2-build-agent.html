@@ -230,10 +230,29 @@ SOFTWARE.
 
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="true"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Verify access before starting</span><span class="card-sub">Your account, your project, your agent.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body" id="before-you-start">
-    <p id="before-you-start-heading">Open <a href="https://ai.azure.com">ai.azure.com</a> with your assigned workshop account. Select the tenant and project from your seat details; check the project name before creating anything.</p>
-    <p id="prepared-seat-readiness">Confirm with your facilitator that your seat can create agents and personal-information guardrails, select the models below, and read traces. If sign-in or a required control is unavailable, stop and contact your facilitator; do not switch to a personal account or deploy replacements.</p>
-    <p>Models: admin-connected <code>gpt-5.6-luna</code> and <code>Mistral-Large-3</code>; project-local <code>gpt-5.2</code>. Personal information (PII) includes email addresses. Use only the fictional address supplied here.</p>
-    <p>If you completed <a href="chapter-1-foundry-setup.html#card-test-models">Lab 1</a>, keep its project and deployments. Confirm the project assigned for this lab and the additional models above with your facilitator; do not substitute Lab 1's deployments for this exercise's models.</p>
+    <p id="before-you-start-heading">Open <a href="https://ai.azure.com">ai.azure.com</a> with your assigned workshop account and <strong>New Foundry</strong> on. Select the tenant, Foundry resource and project you created in Lab 1; check the project name before creating anything.</p>
+    <p id="prepared-seat-readiness">Confirm with your facilitator that your seat can create agents and personal-information guardrails, select two available model deployments, create or connect Application Insights in your assigned resource group, and read its telemetry. Your new Foundry project does not collect traces until Application Insights is connected; complete the setup below before your first agent message. If sign-in or a required control is unavailable, stop and contact your facilitator; do not switch to a personal account or deploy replacements.</p>
+    <p>Reuse the deployments from <a href="chapter-1-foundry-setup.html#card-test-models">Lab 1</a>: your primary Sol (for example <code>gpt-6.1-sol</code>), plus <code>gpt-6-luna</code> or <code>FW-GLM-5.3-Flash</code> once ready. These are examples, not mandatory model IDs. You may choose another previously deployed model according to available capacity, provided it is selectable for the agent and the facilitator confirms the required features. Record the actual model ID, deployment name and version.</p>
+    <p>For the PII steps, confirm one of your project-local Lab 1 deployments supports the Email / User input control and its trace evidence; do not assume every comparison model supports that path. Stay in your own Lab 1 project and select your own deployments, not centrally connected models. If you have no suitable deployment, ask the facilitator for a compatible option in this project. Personal information (PII) includes email addresses. Use only the fictional address supplied here.</p>
+  </div>
+</article>
+<article class="card" id="card-enable-tracing">
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Connect Application Insights before the first message</span><span class="card-sub">Enable collection for your own project once.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body">
+    <ol class="steps">
+      <li><p>In your Lab 1 project, select <strong>Agents</strong> in the left navigation (under <strong>Build</strong>), then the <strong>Traces</strong> tab at the top. This is the project traces page, not the trace dialog beneath a chat reply.</p></li>
+      <li><p>Select <strong>Connect</strong> on the right. If your project already has the correct Application Insights connection, keep it; do not replace it or create a duplicate resource.</p></li>
+      <li><p>Select <strong>Create new</strong> to open the Application Insights creation wizard. Use your assigned subscription and Lab 1 resource group, an own-seat name such as <code>appinsights-&lt;seat-number&gt;</code>, and the facilitator-approved region and Log Analytics workspace. Create only within that approved scope. If a workspace must also be created, confirm its scope and cost with the facilitator first; do not select another seat's workspace.</p></li>
+      <li><p>Complete the wizard and wait for the connection-success confirmation. If the resource exists but is not connected, select it in the connection picker and select <strong>Connect</strong>. Record the Application Insights resource name and its workspace. Connecting it enables server-side tracing; no SDK, code change or connection string in chat is needed.</p></li>
+    </ol>
+    <p><strong>Verify after your first message:</strong> create the agent and send the <a href="#customer-prompt">customer message</a> below. Return to <strong>Agents &rarr; Traces</strong>, wait a few minutes and refresh. Find the new invocation by its timestamp and response ID, then open its span details. A successful connection alone does not prove collection, and a request sent before setup is not a reliable verification case.</p>
+    <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Your project is connected to your approved Application Insights resource, and a new agent request appears in Traces. Complete this check before the Block and Annotate comparison; those steps need actual telemetry.</p></div>
+    <div class="reveal"><button type="button" class="reveal-toggle" aria-expanded="false">If Connect is missing or traces stay empty</button><div class="reveal-body">
+      <p>If <strong>Connect</strong> is absent, select <strong>Manage &rarr; Project details &rarr; Connected resources &rarr; Add connection</strong>. In <strong>Choose a connection</strong>, select <strong>Application Insights</strong>, then create or select your approved resource and connect it.</p>
+      <p>For an empty list, check the connected resource and send a new synthetic message after setup. Refresh after a few minutes; stop waiting after five minutes and give the facilitator the project, resource name, request timestamp and response ID. Inspect an existing or pending creation before retrying; do not create multiple resources to recover missing telemetry.</p>
+      <p>For authorization errors, ask the facilitator to check telemetry access, including <strong>Log Analytics Reader</strong> for log queries and additional access if tables are protected. Creating the Foundry resource does not automatically grant all telemetry permissions. Do not change role assignments, network policy or ingestion authentication yourself.</p>
+    </div></div>
+    <p><strong>Privacy and cost:</strong> traces can store prompts, replies and tool data. Use only the synthetic inputs in this guide. Application Insights and Log Analytics have their own retention and billing; keep the workshop-approved settings and retain these resources for later labs. Leave their final removal to the facilitator.</p>
   </div>
 </article>
 </section>
@@ -249,7 +268,7 @@ SOFTWARE.
     <div class="code" id="baseline-instructions"><p class="code-label">Instructions</p><pre><code>You help customers with fictional click-and-collect orders.
 Use only the facts supplied in the conversation.
 You cannot look up orders, send messages, or change reservations.</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy aria-label="Copy Instructions">Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
-    <p>Select <code>gpt-5.6-luna</code> under <strong>Admin-connected</strong>, save any change.</p>
+    <p>Select your primary Sol deployment (for example <code>gpt-6.1-sol</code>) under <strong>Deployments</strong>, or another previously deployed model confirmed in preflight. Select the deployment name you recorded, not just the model ID, and save any change.</p>
     <p><strong>Why:</strong> define what the assistant knows and can do. Do not add a greeting style, empathy rubric, length rule or response template yet.</p>
     <div class="checkpoint"><span class="checkpoint__label">Check</span><p>The configuration shows your instructions and a saved agent version. Leave knowledge and tools empty.</p></div>
   </div>
@@ -263,16 +282,16 @@ You cannot look up orders, send messages, or change reservations.</code></pre><d
 The order is still being prepared. Pickup is allowed only after the ready notification. The store closes at 18:00.
 Can you help me work out what to do?</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy aria-label="Copy Customer message">Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
     <p><strong>Why:</strong> experience a customer-facing answer, not a structured report. All facts come from this message, not a database or document.</p>
-    <div class="checkpoint"><span class="checkpoint__label">Check</span><p>You receive an answer about the pickup. Note how it greets you, handles frustration and explains the next step. Flag invented readiness times or claims to have checked the order.</p></div>
+    <div class="checkpoint"><span class="checkpoint__label">Check</span><p>You receive an answer about the pickup. Note how it greets you, handles frustration and explains the next step. Flag invented readiness times or claims to have checked the order. Verify this invocation appears in <a href="#card-enable-tracing">your newly connected Traces view</a> before proceeding.</p></div>
   </div>
 </article>
 </section>
 <section class="chapter" id="ch-model-choice"><h2 class="chapter-label">Model comparison</h2>
 <article class="card" id="card-model-choice-1">
 
-  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Compare the same message with Mistral</span><span class="card-sub">A fresh chat prevents reuse of the first answer.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Compare the same message with another model</span><span class="card-sub">A fresh chat prevents reuse of the first answer.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body" id="model-choice">
-    <p id="model-choice-heading">Keep the first answer and its model/version in your notes. Select <code>Mistral-Large-3</code>, save, start <strong>New chat</strong>, and send the identical <a href="#customer-prompt">customer message</a>.</p>
+    <p id="model-choice-heading">Keep the first answer and its model/version in your notes. Select a different previously deployed model, for example <code>gpt-6-luna</code> or <code>FW-GLM-5.3-Flash</code> if ready and selectable. Save, start <strong>New chat</strong>, and send the identical <a href="#customer-prompt">customer message</a>. If only one compatible deployment is ready, ask the facilitator for a prepared alternative; do not wait for a pending GLM deployment or count a same-model rerun as a model comparison.</p>
     <p><strong>Why:</strong> compare factual restraint, tone and usefulness without changing the instructions or conversation history.</p>
     <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Choose a provisional favourite and name one difference. Both answers may already be good; do not manufacture a failure.</p></div>
   </div>
@@ -281,9 +300,9 @@ Can you help me work out what to do?</code></pre><div class="lab-copy-row"><butt
 <section class="chapter" id="ch-guardrail"><h2 class="chapter-label">Block, then annotate</h2>
 <article class="card" id="card-guardrail-1">
 
-  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Try an email before adding a PII control</span><span class="card-sub">Use the local model for the rehearsed guardrail path.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Try an email before adding a PII control</span><span class="card-sub">Use the local deployment confirmed in preflight.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body" id="guardrail">
-    <p id="guardrail-heading">Switch to <code>gpt-5.2</code> under <strong>Deployments</strong> and save. Keep the default guardrail; do not disable existing controls. Send each message in a separate <strong>New chat</strong>.</p>
+    <p id="guardrail-heading">Select the project-local deployment confirmed for PII in preflight under <strong>Deployments</strong>, for example your primary Sol or another previously deployed compatible model, and save. Record it as your guardrail-test deployment and keep it unchanged through the Block and Annotate steps. Keep the default guardrail; do not disable existing controls. Send each message in a separate <strong>New chat</strong>.</p>
     <div class="code" id="control-prompt"><p class="code-label">Control: no email</p><pre><code>Hi! In this fictional training case, my order is still being prepared and pickup requires a ready notification. What should I do?</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy aria-label="Copy Control: no email">Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
     <div class="code" id="pii-prompt"><p class="code-label">Same case with synthetic email</p><pre><code>Hi! In this fictional training case, my order is still being prepared and pickup requires a ready notification. What should I do?
 My contact email is alex.customer@example.com.</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy aria-label="Copy Same case with synthetic email">Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
@@ -307,7 +326,7 @@ My contact email is alex.customer@example.com.</code></pre><div class="lab-copy-
 
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Repeat both messages and identify the block</span><span class="card-sub">Fresh chats keep the email out of the control case.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
-    <p>On <code>gpt-5.2</code>, resend the <a href="#control-prompt">control</a> and <a href="#pii-prompt">email message</a>, each in a separate <strong>New chat</strong>.</p>
+    <p>On the same guardrail-test deployment, resend the <a href="#control-prompt">control</a> and <a href="#pii-prompt">email message</a>, each in a separate <strong>New chat</strong>.</p>
     <div class="checkpoint"><span class="checkpoint__label">Check</span><p>The control answers. The email message triggers a platform guardrail block identifying personal information at user input. Record the request ID or trace link and policy action.</p></div>
   </div>
 </article>
@@ -336,21 +355,15 @@ My contact email is alex.customer@example.com.</code></pre><div class="lab-copy-
 
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Keep this agent for the next chapters</span><span class="card-sub">Do not tune the personality or delete the agent yet.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
-    <p>Record your agent name/version, original instructions, model, policy name/action and one trace ID in your local notes. Keep the agent on <code>gpt-5.2</code> with your lab-only Annotate policy.</p>
+    <p>Record your agent name/version, original instructions, actual model ID, deployment name/version, policy name/action and one trace ID in your local notes. Keep the agent on your guardrail-test deployment with your lab-only Annotate policy; reuse it in Lab 3 rather than switching to a model named in an example.</p>
     <p>Knowledge will add facts beyond the message. Custom evaluations will turn impressions of empathy, tone and usefulness into a rubric: baseline run, prompt change, same-case rerun. Keep model, policy and knowledge fixed during that comparison.</p>
     <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Your agent remains available, its original instructions are unchanged, and you can distinguish detected data from blocked data. A neutral prompt may already produce a friendly answer; improvement must be measured, not assumed.</p></div>
   </div>
 </article>
 </section>
-<section class="chapter" id="resume-cleanup">
-  <h2 class="chapter-label">Resume, reset and cleanup</h2>
-  <p><strong>Resume:</strong> reopen your assigned tenant, project and <code>pickup-&lt;seat&gt;</code> agent. Check its saved version, <code>gpt-5.2</code> model and your named guardrail policy before continuing at the last completed checkpoint. Do not create a duplicate agent to recover a missing trace; wait about two minutes, then ask your facilitator with the response ID.</p>
-  <p><strong>Reset this exercise:</strong> first save your notes and version IDs. In your own agent, restore the <a href="#baseline-instructions">three-line baseline instructions</a>, select <code>gpt-5.2</code> and save a new version. In your own lab-only policy, restore <strong>Email protection / User input / Block</strong> before replaying the Block and Annotate steps. Keep other controls unchanged. Ask your facilitator instead of editing a shared policy.</p>
-  <p><strong>Cleanup:</strong> keep your agent and its lab-only policy for Lab 3. After your final lab, export your notes and give the facilitator your seat, agent and policy names. The facilitator owns removal of workshop resources; do not delete a project, model deployment or shared policy. Keep using synthetic data while Annotate is enabled; do not leave that lab setting attached to a production agent.</p>
-</section>
 </main>
 <section class="takeaway" id="closing"><p>You created an agent, tried different models, enabled guardrails, and inspected traces.</p></section>
-<footer class="doc-footer">Microsoft Foundry One-Day Workshop</footer>
+<footer class="doc-footer"><p>Tracing menu labels checked <time datetime="2026-10-01">1 October 2026</time>: <a href="https://learn.microsoft.com/azure/foundry/observability/how-to/trace-agent-setup">Set up tracing in Microsoft Foundry</a>. Confirm the live portal and your assigned permissions before running the lab.</p></footer>
 </div>
 </body>
 </html>

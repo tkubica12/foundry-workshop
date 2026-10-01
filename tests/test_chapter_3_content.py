@@ -234,12 +234,10 @@ def test_core_completion_extensions_and_safe_recovery_are_explicit():
     assert "Optional extensions: grow the test set" in source
     assert "do not change the core completion criteria" in source
     assert "Stop waiting after five minutes" in source
-    for filename in ("chapter-2-build-agent.html", "chapter-3-evaluate-agent.html"):
-        guide = (ROOT / "docs" / "guides" / filename).read_text(encoding="utf-8")
-        assert 'id="resume-cleanup"' in guide
-        assert "<strong>Resume:</strong>" in guide
-        assert "<strong>Cleanup:</strong>" in guide
-        assert "facilitator owns" in guide
+    assert 'id="resume-cleanup"' in source
+    assert "<strong>Resume:</strong>" in source
+    assert "<strong>Cleanup:</strong>" in source
+    assert "facilitator owns" in source
 
 
 def test_candidate_reuses_evaluation_and_exercises_compare_and_analysis():

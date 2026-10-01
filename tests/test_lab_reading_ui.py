@@ -60,9 +60,10 @@ def test_reading_query_deep_links_and_print_keep_the_lab_visible(browser, guide,
     errors = []
     page.on("pageerror", lambda error: errors.append(str(error)))
     try:
-        page.goto(guide.as_uri() + "?view=slides#resume-cleanup")
+        anchor = "closing" if guide.name == "chapter-2-build-agent.html" else "resume-cleanup"
+        page.goto(guide.as_uri() + f"?view=slides#{anchor}")
         expect(page.locator("html")).not_to_have_attribute("data-view", "slides")
-        expect(page.locator("#resume-cleanup")).to_be_visible()
+        expect(page.locator(f"#{anchor}")).to_be_visible()
         expect(page.locator("h1")).to_be_visible()
         assert page.locator(".slide-content").count() == 0
         page.evaluate("window.print = () => { window.printCalled = true; }")

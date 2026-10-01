@@ -42,7 +42,9 @@ def test_access_project_playground_and_recovery_are_concrete():
         "each of your three", "up to 30 minutes", "not a completed checkpoint",
         "Do not register subscription-wide features",
         "30 seconds", "60 seconds", "The facilitator owns deletion",
-        "Lab 1's three deployments do not replace those prerequisites",
+        "reuse your primary Sol deployment",
+        "another previously deployed model",
+        "Confirm guardrails and trace access separately",
         'id="resume-cleanup"', 'id="hello-prompt"', "outside Sweden",
     ):
         assert required.lower() in source.lower()
