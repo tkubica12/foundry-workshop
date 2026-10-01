@@ -6,6 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from azure.ai.projects.models import AgentVersionStatus
 from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 
 spec = importlib.util.spec_from_file_location("lab07", Path(__file__).resolve().parents[1] / "scripts" / "lab07.py")
@@ -44,6 +45,31 @@ class Project:
 
     def __exit__(self, *args):
         pass
+
+
+@pytest.mark.parametrize("status", ["active", AgentVersionStatus.ACTIVE])
+def test_wait_accepts_sdk_enum_and_wire_string(setup, monkeypatch, status):
+    _, config_path, state, _ = setup
+    config = lab07.read_config(config_path)
+    owned = SimpleNamespace(status=status, metadata={
+        "lab07_owner": config["owner"], "lab07_config": lab07.fingerprint(config),
+    })
+    project = Project(SimpleNamespace(get_version=lambda *a: owned))
+    monkeypatch.setattr(lab07.time, "sleep", lambda _: pytest.fail("Active must return immediately"))
+    assert lab07.wait_active(project, config, {"version": "1", "_path": state}, 30) is owned
+    assert json.loads(state.read_text())["status"] == "active"
+
+
+def test_failed_sdk_enum_stops_polling(setup, monkeypatch):
+    _, config_path, state, _ = setup
+    config = lab07.read_config(config_path)
+    owned = SimpleNamespace(status=AgentVersionStatus.FAILED, metadata={
+        "lab07_owner": config["owner"], "lab07_config": lab07.fingerprint(config),
+    })
+    project = Project(SimpleNamespace(get_version=lambda *a: owned))
+    monkeypatch.setattr(lab07.time, "sleep", lambda _: pytest.fail("Failed must stop immediately"))
+    with pytest.raises(RuntimeError, match="failed"):
+        lab07.wait_active(project, config, {"version": "1", "_path": state}, 30)
 
 
 def test_uncertain_creation_is_not_retried(setup, monkeypatch):

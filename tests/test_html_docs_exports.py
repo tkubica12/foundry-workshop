@@ -23,6 +23,8 @@ EXPORT_PATHS = {
     Path("guides/chapter-3-evaluate-agent.html"),
     Path("guides/chapter-4-connect-tools.html"),
     Path("guides/chapter-5-knowledge-base.html"),
+    Path("guides/chapter-6-managed-memory.html"),
+    Path("guides/chapter-7-hosted-agent.html"),
 }
 DOWNLOAD_PATHS = {
     Path("assets/knowledge-base/instruments-pdfs.zip"),
@@ -57,10 +59,10 @@ def test_canonical_heads_match_vendored_source():
 def test_export_is_offline_and_keeps_reading_text(source, browser, tmp_path):
     target = tmp_path / source.name
     license_text = (RUNTIME / "LICENSE").read_text(encoding="utf-8").strip()
-    assert license_text in source.read_text(encoding="utf-8"), "MIT notice must travel with export"
+    assert " ".join(license_text.split()) in " ".join(source.read_text(encoding="utf-8").split()), "MIT notice must travel with export"
     run_node(RUNTIME / "bundle.js", source, target)
     assert list(tmp_path.iterdir()) == [target], "export isolation requires one HTML file only"
-    assert license_text in target.read_text(encoding="utf-8")
+    assert " ".join(license_text.split()) in " ".join(target.read_text(encoding="utf-8").split())
     context = browser.new_context(java_script_enabled=False)
     page = context.new_page()
     try:

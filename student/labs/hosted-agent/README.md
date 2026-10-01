@@ -66,7 +66,8 @@ OpenTelemetry provider rather than creating a duplicate exporter.
 
 Use `scripts\invoke.py` with the matching active deployment receipt. `start`
 sends the fixed read-only complaint/partner prompt. Each command prints its
-Response ID and caller Trace ID. Review the exact pending tool/arguments, then
+Response ID and caller Trace ID and retains each new turn's correlation in
+the private conversation receipt. Review the exact pending tool/arguments, then
 approve one displayed ID at a time; the script never approves future calls.
 
 ```powershell
@@ -79,7 +80,11 @@ start a separate `reject.json` chain and use `reject` instead of `approve`,
 with that chain's current ID. Expect `interrupt_rejected` and a nonzero exit
 code. Check actual model/tool spans and returned facts in the assigned trace
 viewer; terminal answer text alone is insufficient. Each HTTP continuation can
-have its own trace ID; the Responses receipts link the chain.
+have its own trace ID; the Responses receipts link the chain. Approval interrupts
+can appear as unsuccessful tool spans without a result. Verify resumed successful
+spans with recorded results; duplicate tracing layers do not prove duplicate
+remote calls. The pinned SDK's interrupt/resume callback warnings and observed
+qualification limits are recorded in `VALIDATION.md`.
 
 ## Recovery, reset and cleanup
 

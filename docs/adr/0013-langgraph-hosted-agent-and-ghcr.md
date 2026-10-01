@@ -106,6 +106,10 @@ Offline tests exercise the actual HTTP Responses host, approve/reject continuati
 tool inventory, write denial, uncertain creates, locks and version-only cleanup.
 An independent safety review identified and then verified repair of a
 parent-deletion race. Live operator MCP discovery returned the seven expected
-tools. Image publication, hosted calls, correlated live traces, attendee roles
-and room concurrency are separate qualification gates recorded in the lab's
-operational validation record.
+tools. The published, anonymous-pull-verified GHCR digest activated directly in
+two isolated hosted instances. Their approved answers matched actual tool
+results; rejected chains executed no tool. Correlated hosting, graph, model
+and tool spans were observed in Application Insights. Both immutable versions
+were cleaned up and verified absent. Attendee roles, native trace viewers,
+room concurrency and the learning timebox remain separate qualification gates
+recorded in the lab's operational validation record.

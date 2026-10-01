@@ -5,6 +5,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from azure.ai.projects.models import AgentVersionStatus
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import invoke
@@ -39,8 +40,10 @@ def setup(tmp_path, monkeypatch):
     return args, conversation
 
 
-def test_start_saves_response_trace_and_requires_individual_approval(setup, monkeypatch):
+@pytest.mark.parametrize("status", ["active", AgentVersionStatus.ACTIVE])
+def test_start_saves_response_trace_and_requires_individual_approval(setup, monkeypatch, status):
     args, conversation = setup
+    monkeypatch.setattr(invoke, "checked_version", lambda *a: SimpleNamespace(status=status))
     sent = []
     result = {"id": "resp-1", "status": "completed", "output": [
         {"type": "mcp_approval_request", "id": "approval-1", "name": "get_partner", "arguments": "{}"},
@@ -70,6 +73,11 @@ def test_start_saves_response_trace_and_requires_individual_approval(setup, monk
     args += ["--approval-id", "approval-1"]
     invoke.main()
     assert sent[1]["input"] == [{"type": "mcp_approval_response", "approval_request_id": "approval-1", "approve": True}]
+    turns = json.loads(conversation.read_text())["turns"]
+    assert len(turns) == 2
+    assert turns[0]["operation"] == "start" and turns[0]["previous_response_id"] is None
+    assert turns[1]["operation"] == "approve" and turns[1]["previous_response_id"] == "resp-1"
+    assert all(len(turn["trace_id"]) == 32 for turn in turns)
 
 
 def test_uncertain_turn_cannot_be_replayed(setup, monkeypatch):

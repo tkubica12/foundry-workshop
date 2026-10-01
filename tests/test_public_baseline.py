@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import re
+import subprocess
 import tomllib
 
 
@@ -14,12 +15,17 @@ CUSTOMER_CONTEXT = re.compile(
 
 
 def public_files():
-    roots = ("docs", "student", "teacher", "templates", "tests")
-    files = [path for name in roots for path in (ROOT / name).rglob("*") if path.is_file()]
-    files.extend(path for path in ROOT.iterdir() if path.is_file() and path.name != ".git")
+    roots = {"docs", "student", "teacher", "templates", "tests"}
+    names = subprocess.check_output(
+        ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+        cwd=ROOT,
+    ).decode("utf-8").split("\0")
+    files = [ROOT / name for name in names if name and (
+        len(Path(name).parts) == 1 or Path(name).parts[0] in roots
+    )]
     return [
         path for path in files
-        if not any(part in {"__pycache__", ".pytest_cache", "evidence"} for part in path.parts)
+        if path.is_file() and not any(part in {"__pycache__", ".pytest_cache", "evidence"} for part in path.parts)
     ]
 
 
@@ -67,7 +73,7 @@ def test_one_day_scope_and_honest_publication_boundary():
     assert "55 minutes" in agenda
     assert "not published" in agenda
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    assert "Labs 1 through 5 have published guides" in readme
+    assert "Labs 1 through 6 and optional Lab 7 have published guides" in readme
     assert "portal journey still needs an attendee-identity rehearsal" in readme
     assert "handoffs" not in readme
 

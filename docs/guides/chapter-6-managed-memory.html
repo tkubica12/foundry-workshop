@@ -1,0 +1,335 @@
+<!doctype html>
+<!--
+MIT License
+
+Copyright (c) 2026 Tomáš Kubica
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<html lang="en" data-default-accent="blue">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 6 - Remember across conversations</title>
+<meta name="description" content="Compare an agent without memory, enable managed memory, and inspect user profiles and chat summaries across new chats.">
+<meta name="doc-id" content="foundry-chapter-6">
+<script data-doc-bootstrap>
+/* Inline in the head before styles with sync-head.js. No deferred bootstrap. */
+(() => {
+  "use strict";
+  const root = document.documentElement;
+  const params = new URLSearchParams(location.search);
+  const id = document.querySelector('meta[name="doc-id"]')?.content ||
+    location.pathname.replace(/\.standalone(?=\.html$)/i, "");
+  const prefix = "html-docs:" + id + ":";
+  const choices = { theme: ["light", "dark"], accent: ["blue", "red", "green", "yellow"] };
+  const read = (name) => {
+    try { return localStorage.getItem(prefix + name); }
+    catch { return null; /* Storage may be unavailable for local files. */ }
+  };
+  const write = (name, value) => {
+    try { localStorage.setItem(prefix + name, value); }
+    catch { /* The current view still works without persistence. */ }
+  };
+  function refresh() {
+    for (const name of Object.keys(choices)) {
+      const current = root.getAttribute("data-" + name);
+      const next = choices[name][(choices[name].indexOf(current) + 1) % choices[name].length];
+      document.querySelectorAll('[data-action="toggle-' + name + '"]').forEach(button => {
+        button.textContent = name === "theme" ? (next === "dark" ? "Dark" : "Light") :
+          "Accent: " + current[0].toUpperCase() + current.slice(1);
+        button.setAttribute("aria-label", name === "theme" ? "Switch to " + next + " theme" :
+          "Accent: " + current + ". Switch to " + next);
+      });
+    }
+  }
+  for (const [name, values] of Object.entries(choices)) {
+    const fallback = name === "theme" && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : values[0];
+    const value = [params.get(name), read(name), root.getAttribute("data-default-" + name), fallback]
+      .map(candidate => name === "accent" && candidate === "orange" ? "red" : candidate)
+      .find(candidate => values.includes(candidate));
+    root.setAttribute("data-" + name, value);
+  }
+  root.classList.add("js");
+  if (["slides", "sheet"].includes(params.get("view"))) root.setAttribute("data-view", params.get("view"));
+
+  // Print what is on screen. data-print selects the matching print stylesheet.
+  const printTarget = () => {
+    if (document.querySelector(".deck-stage")) return "slides";
+    const view = root.getAttribute("data-view");
+    if (view === "slides" || (view === "sheet" && document.querySelector(".sheet"))) return view;
+    return document.querySelector(".doc") || !document.querySelector(".sheet") ? "read" : "sheet";
+  };
+  let printing = null;
+  addEventListener("beforeprint", () => {
+    if (root.hasAttribute("data-print")) return; // Set by an automated export.
+    const target = printTarget();
+    printing = document.title;
+    root.setAttribute("data-print", target);
+    // The browser proposes the title as the PDF file name.
+    if (target !== "read" && document.querySelector(".doc")) {
+      document.title += target === "slides" ? " - Slides" : " - Sheet";
+    }
+  });
+  addEventListener("afterprint", () => {
+    if (printing === null) return;
+    root.removeAttribute("data-print");
+    document.title = printing;
+    printing = null;
+  });
+
+  // Keep the display awake while presenting, like presentation software does.
+  let lock = null;
+  let awake = false;
+  async function holdScreen() {
+    if (!awake || lock || document.visibilityState !== "visible" || !navigator.wakeLock) return;
+    try {
+      const sentinel = await navigator.wakeLock.request("screen");
+      if (!awake || lock) { sentinel.release(); return; }
+      lock = sentinel;
+      root.setAttribute("data-awake", "");
+      sentinel.addEventListener("release", () => {
+        if (lock !== sentinel) return;
+        lock = null;
+        root.removeAttribute("data-awake");
+      });
+    } catch { /* Denied by battery saver or an embedding policy; retried on input. */ }
+  }
+  function keepAwake(on) {
+    awake = !!on;
+    if (awake) holdScreen();
+    else if (lock) lock.release();
+  }
+  // The browser drops the lock when the tab is hidden; some require a gesture.
+  document.addEventListener("visibilitychange", holdScreen);
+  document.addEventListener("pointerdown", holdScreen);
+  document.addEventListener("keydown", holdScreen);
+
+  window.HtmlDocs = { read, write, refresh, keepAwake };
+  document.addEventListener("DOMContentLoaded", refresh);
+  document.addEventListener("click", event => {
+    if (event.target.closest('[data-action="print"]')) window.print();
+  });
+  document.addEventListener("click", event => {
+    const button = event.target.closest('[data-action="toggle-theme"], [data-action="toggle-accent"]');
+    if (!button) return;
+    const name = button.getAttribute("data-action").slice(7);
+    const values = choices[name];
+    const next = values[(values.indexOf(root.getAttribute("data-" + name)) + 1) % values.length];
+    root.setAttribute("data-" + name, next);
+    write(name, next);
+    // Replace a URL override too, so reloading preserves a deliberate change.
+    const url = new URL(location.href);
+    if (url.searchParams.has(name)) {
+      url.searchParams.set(name, next);
+      history.replaceState(null, "", url.href);
+    }
+    refresh();
+  });
+})();
+</script>
+<style data-doc-tokens>
+/* Canonical tokens. Inline with sync-head.js; one accent family at a time. */
+:root {
+  color-scheme: light;
+  --bg: #fafafa; --surface: #ffffff; --surface-2: #f2f2f2; --surface-3: #e8e8e8;
+  --border: #dedede; --border-strong: #b8b8b8;
+  --text: #161616; --text-muted: #565656; --text-faint: #686868;
+  --accent-light: #006da0; --accent-dark: #00a4ef;
+  --accent: var(--accent-light);
+  --accent-strong: var(--accent);
+  --accent-quiet: var(--accent);
+  --accent-soft: color-mix(in srgb, var(--accent) 9%, var(--bg));
+  --accent-border: color-mix(in srgb, var(--accent) 36%, var(--bg));
+  --warn: var(--accent); --warn-soft: var(--accent-soft); --warn-border: var(--accent-border);
+  --code-bg: var(--surface-2); --code-border: var(--border);
+  --focus: var(--accent);
+  --shadow-1: 0 1px 2px rgba(0,0,0,.04);
+  --shadow-2: 0 2px 4px rgba(0,0,0,.04), 0 12px 28px rgba(0,0,0,.06);
+  --radius: 10px; --radius-sm: 6px; --canvas: 1160px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Cascadia Mono", "Cascadia Code", ui-monospace, Consolas, "SF Mono", "Liberation Mono", Menlo, monospace;
+}
+/* Screen only: every PDF and printout uses the light palette. */
+@media screen {
+  [data-theme="dark"], :root:not([data-theme])[data-default-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101010; --surface: #191919; --surface-2: #232323; --surface-3: #2c2c2c;
+    --border: #363636; --border-strong: #595959;
+    --text: #f2f2f2; --text-muted: #b5b5b5; --text-faint: #a0a0a0;
+    --accent: var(--accent-dark);
+    --shadow-1: 0 1px 2px rgba(0,0,0,.3);
+    --shadow-2: 0 2px 4px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.4);
+  }
+}
+[data-accent="red"], :root:not([data-accent])[data-default-accent="red"],
+[data-accent="orange"], :root:not([data-accent])[data-default-accent="orange"] {
+  --accent-light: #bc3a16; --accent-dark: #f25022;
+}
+[data-accent="green"], :root:not([data-accent])[data-default-accent="green"] {
+  --accent-light: #4c7100; --accent-dark: #7fba00;
+}
+[data-accent="yellow"], :root:not([data-accent])[data-default-accent="yellow"] {
+  --accent-light: #805b00; --accent-dark: #ffb900;
+}
+</style>
+<link rel="stylesheet" href="../assets/html-docs/article.css">
+<link rel="stylesheet" href="../assets/document-navigation.css">
+<link rel="stylesheet" href="../assets/lab-articles.css">
+<script src="../assets/html-docs/article.js" defer></script>
+<script src="../assets/lab-articles.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#content">Skip to the exercise</a>
+<div class="controls" role="group" aria-label="Article controls">
+  <button type="button" class="ctrl" data-action="expand-all">Expand all</button>
+  <button type="button" class="ctrl" data-action="collapse-all">Collapse all</button>
+  <button type="button" class="ctrl" data-action="print">PDF</button>
+  <button type="button" class="ctrl" data-action="toggle-theme">Dark</button>
+  <button type="button" class="ctrl" data-action="toggle-accent">Accent: Blue</button>
+</div>
+<div class="doc">
+  <header class="doc-header" id="opening">
+
+    <p class="eyebrow">Chapter 6 &middot; Hands-on</p>
+    <h1>Remember across conversations</h1>
+    <p class="subtitle">Try an agent without memory. Enable managed memory, inspect a stored preference and recover a previous discussion in a new chat.</p>
+    <ul class="lab-meta">
+      <li><strong>Time</strong>20 minutes core; 5 minutes recovery and discussion</li>
+      <li><strong>Environment</strong>Foundry (new), assigned account, Memory preview</li>
+      <li><strong>Outcome</strong>A user profile and a chat summary verified across new chats</li>
+    </ul>
+  </header>
+  <nav class="doc-nav" aria-label="Workshop navigation"><a href="../index.html">Workshop index</a><a href="chapter-5-knowledge-base.html">Chapter 5</a></nav>
+  <nav class="toc" aria-label="Contents"><p class="toc-label">Contents</p><ol>
+    <li><a href="#ch-prepare">Prepare</a></li>
+    <li><a href="#ch-baseline">Try without memory</a></li>
+    <li><a href="#ch-enable">Enable managed memory</a></li>
+    <li><a href="#ch-recall">Inspect and recall</a></li>
+    <li><a href="#ch-recovery">Recovery and cleanup</a></li>
+  </ol></nav>
+  <main id="content" tabindex="-1">
+    <section class="chapter" id="ch-prepare"><h2 class="chapter-label">Prepare / 3 minutes</h2>
+      <article class="card card--lead" id="card-preflight" data-open>
+        <h3 class="card-head"><button class="card-toggle" type="button" aria-expanded="true"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Use an isolated agent and fictional preferences</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+        <div class="card-body">
+          <p>Sign in to <a href="https://ai.azure.com">ai.azure.com</a> with your assigned workshop account and <strong>New Foundry</strong> enabled. Confirm your assigned tenant, subscription and project. Keep the same signed-in identity throughout this lab.</p>
+          <p>The facilitator prepares a compatible chat deployment, an embedding deployment and permission to create agents and memory stores. Memory uses additional model calls and is a <strong>preview</strong>; do not deploy models or change permissions during the lab.</p>
+          <ol class="steps">
+            <li><p>Open <strong>Build &rarr; Agents &rarr; New agent &rarr; Build an agent</strong>. In Czech, use <strong>Agenti &rarr; Nový agent &rarr; Sestavit agenta</strong>. Name your text agent <code>memory-&lt;seat&gt;-&lt;run&gt;</code>, replacing both placeholders with your assigned seat and a fresh run label. Select <strong>Create agent and open playground</strong>.</p></li>
+            <li><p>Select the facilitator-confirmed chat deployment in <strong>Model</strong>. Remove any default web-search tool using its <strong>&hellip; &rarr; Remove</strong> menu. Leave Knowledge and Memory unattached. Keep agents from earlier labs unchanged.</p></li>
+            <li><p>Paste these instructions and select <strong>Save</strong>. Keep the instructions and model fixed in both halves of the comparison.</p></li>
+          </ol>
+          <div class="code" id="agent-instructions"><p class="code-label">Agent instructions</p><pre><code>Answer briefly in the language of the user. Use the current conversation and available memory tools for personal facts and previous discussions. If evidence is missing, say you do not know. Do not invent preferences or past conversations.</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy>Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
+          <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Your own new text agent opens in Playground, has no tools, knowledge or memory attached, and uses the prepared deployment. If Memory or the deployments are missing, stop for facilitator help.</p></div>
+        </div>
+      </article>
+    </section>
+    <section class="chapter" id="ch-baseline"><h2 class="chapter-label">Try without memory / 3 minutes</h2>
+      <article class="card" id="card-baseline">
+        <h3 class="card-head"><button class="card-toggle" type="button" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">A new chat does not inherit the old conversation</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+        <div class="card-body">
+          <ol class="steps">
+            <li><p>In Playground, send this fictional preference and discussion. Wait for a completed reply.</p></li>
+          </ol>
+          <div class="code" id="seed-prompt"><p class="code-label">Preference and discussion</p><pre><code>Remember that I like apples. Today we discussed a fruit snack for a fictional hiking trip: pack apples in a reusable box.</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy>Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
+          <ol class="steps" start="2">
+            <li><p>Select <strong>New chat</strong> (<strong>Nový chat</strong>), the chat-bubble-plus control above the chat pane. Confirm the previous messages disappear. Send:</p></li>
+          </ol>
+          <div class="code" id="baseline-prompt"><p class="code-label">Recall without memory</p><pre><code>What fruit do I like? Have we ever discussed fruit?</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy>Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
+          <div class="checkpoint"><span class="checkpoint__label">Check</span><p>The agent cannot substantiate your preference or the previous discussion. Record the answer. A claim such as “I’ll remember” in the first chat is not evidence of storage. If it guesses apples, treat that as a failed baseline, not memory.</p></div>
+          <p>Without an attached memory store, this agent does not create a managed user profile or chat summary. It can still use earlier messages <em>inside the same chat</em>; that is conversation context, not cross-session memory.</p>
+        </div>
+      </article>
+    </section>
+    <section class="chapter" id="ch-enable"><h2 class="chapter-label">Enable managed memory / 4 minutes</h2>
+      <article class="card" id="card-memory-store">
+        <h3 class="card-head"><button class="card-toggle" type="button" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Attach a store that extracts profiles and summaries</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+        <div class="card-body">
+          <ol class="steps">
+            <li><p>Open <strong>Build &rarr; Memory &rarr; Create memory store</strong> (<strong>Paměť &rarr; Vytvořit paměťové úložiště</strong>). Use a fresh name <code>memory-store-&lt;seat&gt;-&lt;run&gt;</code>. Select the prepared <strong>Chat completion model</strong> and <strong>Embedding model</strong> deployments; do not accept unverified defaults.</p></li>
+            <li><p>Expand <strong>Advanced settings</strong> (<strong>Rozšířená nastavení</strong>). Enable <strong>User profile</strong> and <strong>Chat summary</strong> extraction (<strong>Povolit profil uživatele</strong>, <strong>Povolit souhrn chatu</strong>). Disable <strong>Procedural memory</strong>; it is outside this lab. Leave profile details and TTL at the facilitator-approved defaults. Select <strong>Create</strong>.</p></li>
+            <li><p>Return to <strong>Build &rarr; Agents</strong>, open your agent's <strong>Playground</strong>, expand <strong>Memory</strong>, and select <strong>Add</strong>. Choose your new store from Recent, or <strong>Browse all memory stores</strong>. Do not choose another person's store or automatic creation.</p></li>
+            <li><p>Select the gear beside the attached store, <strong>Configure memory store</strong> (<strong>Konfigurovat úložiště paměti</strong>). Keep <strong>Scope</strong> (<strong>Obor</strong>) as <code>{{$userId}}</code> and <strong>Update delay (seconds)</strong> as <code>30</code>. Save the dialog, then <strong>Save</strong> the agent.</p></li>
+            <li><p>Select <strong>New chat</strong>. Send the exact <a href="#seed-prompt">preference and discussion prompt</a> again and wait for the completed reply. Enabling memory does not prove old, memory-disabled chats were imported.</p></li>
+          </ol>
+          <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Your store is attached to the saved agent version. The seed prompt has been sent <em>after</em> attachment. Wait at least 30 seconds of inactivity, then inspect storage; extraction can take longer than the configured delay.</p></div>
+          <p><code>{{$userId}}</code> resolves to the authenticated user's identity. Keep it stable while changing chats. A shared static scope would mix users; a new scope for every chat would prevent recall.</p>
+        </div>
+      </article>
+    </section>
+    <section class="chapter" id="ch-recall"><h2 class="chapter-label">Inspect and recall / 8 minutes</h2>
+      <article class="card" id="card-profile">
+        <h3 class="card-head"><button class="card-toggle" type="button" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">The profile remembers a durable preference</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+        <div class="card-body">
+          <ol class="steps">
+            <li><p>Open <strong>Build &rarr; Memory</strong>, select your store's name, then the <strong>Memories</strong> tab (<strong>Paměti</strong>). Keep <strong>Scope</strong> as <code>{{$userId}}</code>. Clear any search text and choose <strong>Kind &rarr; User profile</strong> (<strong>Druh &rarr; Profil uživatele</strong>).</p></li>
+            <li><p>Find a row with kind <code>user_profile</code> and content meaning “The user likes apples.” Wording can differ. Do not use <strong>Create memory</strong> to insert the answer manually.</p></li>
+            <li><p>Return to your agent's Playground. Select <strong>New chat</strong>, confirm the empty chat, and send:</p></li>
+          </ol>
+          <div class="code" id="profile-prompt"><p class="code-label">Recall the profile</p><pre><code>What fruit do I like?</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy>Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
+          <div class="checkpoint"><span class="checkpoint__label">Check</span><p>You have both a stored <code>user_profile</code> row and a fresh-chat answer identifying apples. Do not include “apples” in the recall question or agent instructions.</p></div>
+        </div>
+      </article>
+      <article class="card" id="card-summary">
+        <h3 class="card-head"><button class="card-toggle" type="button" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">The summary remembers what you discussed</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+        <div class="card-body">
+          <ol class="steps">
+            <li><p>Open your store's <strong>Memories</strong> tab again. Keep the same scope and choose <strong>Kind &rarr; Chat summary</strong> (<strong>Druh &rarr; Souhrn chatu</strong>). Find a <code>chat_summary</code> row describing the fictional hiking snack and its reusable box.</p></li>
+            <li><p>Read the summary. It is a distilled record, not necessarily a verbatim transcript or one row per chat. Return to Playground and select <strong>New chat</strong> again. Send:</p></li>
+          </ol>
+          <div class="code" id="summary-prompt"><p class="code-label">Recall a previous discussion</p><pre><code>Have we ever discussed fruit? What did we plan for the fictional hiking snack, and how were we going to pack it?</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy>Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
+          <div class="checkpoint"><span class="checkpoint__label">Check</span><p>The new answer recalls apples <em>and the reusable box</em>, matching the stored summary. A “yes” or the apple preference alone cannot distinguish discussion recall from profile recall. Expand the answer's <strong>Trace</strong> if available and inspect its memory-search result for supporting context.</p></div>
+          <div class="table-wrap"><table><caption>Compare your observed evidence</caption><thead><tr><th>Without memory</th><th>User profile</th><th>Chat summary</th></tr></thead><tbody><tr><td>New chat has no evidence of the old preference or discussion.</td><td>Stored preference; apples recalled in a new chat.</td><td>Stored discussion; snack and packing detail recalled in another new chat.</td></tr></tbody></table></div>
+          <p>Connect this to Lab 5: a knowledge base supplies curated facts; memory supplies context learned from interactions. Neither is a substitute for access control, and retrieved memory can be incomplete or wrong.</p>
+        </div>
+      </article>
+    </section>
+    <section class="chapter" id="ch-recovery"><h2 class="chapter-label">Recovery and cleanup / 2 minutes</h2>
+      <article class="card" id="resume-cleanup">
+        <h3 class="card-head"><button class="card-toggle" type="button" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">A new chat is not a memory reset</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+        <div class="card-body">
+          <div class="reveal"><button class="reveal-toggle" type="button" aria-expanded="false">Troubleshoot an observable failure</button><div class="reveal-body">
+            <ul>
+              <li><strong>No stored row:</strong> confirm the saved agent version, attached store, enabled extraction type and identical identity/scope. Wait, refresh the Memories tab every 30 seconds, and stop after three minutes for facilitator help. Do not manufacture a row.</li>
+              <li><strong>A row exists but recall fails:</strong> check the current agent version and scope; inspect Trace for a memory-search call and retrieved content. Retry once in a new chat without adding the answer to the question.</li>
+              <li><strong>Model error, including unsupported <code>reasoning.effort</code>:</strong> the selected deployment is not qualified for this playground configuration. Ask the facilitator for the compatible prepared deployment and repeat the baseline and candidate with that same model.</li>
+              <li><strong>Missing menu or access denied:</strong> confirm New Foundry and the assigned project. Stop for facilitator help; do not use keys, another account or a broader role to bypass the problem.</li>
+            </ul>
+          </div></div>
+          <p><strong>Resume:</strong> reopen your named agent and store with the same account and scope. Continue from the last stored-row checkpoint. <strong>Reset:</strong> use fresh run-labelled agent and store names and restart the comparison; changing chats alone preserves long-term memory.</p>
+          <p><strong>Cleanup:</strong> only when both resources belong exclusively to this run, open your agent's top <strong>&hellip; &rarr; Delete agent</strong> menu (<strong>Odstranit agenta</strong>). Type its exact name into the confirmation and select Delete. Then open your store under <strong>Build &rarr; Memory</strong>, select its top <strong>&hellip; &rarr; Delete memory store</strong> (<strong>Odstranit paměťové úložiště</strong>), check the displayed name, and confirm deletion. Refresh both lists and verify both names are absent. If deletion fails, report the retained name to the facilitator. Never delete a shared store, model, project or resource group.</p>
+          <p>Deleting or detaching an agent is not proof its memory store was deleted. Store deletion is not a claim that traces, chat records or platform logs were erased. Use only the fictional inputs in this lab.</p>
+          <p><strong>Optional extension:</strong> after the core, correct the fictional fruit preference and inspect how the profile changes. Verify the stored row and a fresh-chat answer; an acknowledgment alone is not enough.</p>
+          <div class="reveal"><button class="reveal-toggle" type="button" aria-expanded="false">Product reference and preview boundaries</button><div class="reveal-body">
+            <p>Menu paths were checked in the native Foundry portal on <time datetime="2026-10-01">1 October 2026</time>, including the Czech labels shown above. Preview labels and availability can change; follow the current controls, not a missing legacy menu.</p>
+            <p>Read <a href="https://learn.microsoft.com/azure/foundry/agents/how-to/memory-usage">Create and use memory</a> for identity resolution, update delay, direct remember/forget and retention; read <a href="https://learn.microsoft.com/azure/foundry/agents/concepts/what-is-memory">Memory concepts</a> for the extraction and retrieval model. A prompt asking to remember can trigger a direct memory command; summary extraction still needs processing time. Per-user scope partitions records but does not replace project authorization or trusted identity handling in a production application.</p>
+          </div></div>
+        </div>
+      </article>
+    </section>
+  </main>
+  <section class="takeaway" id="closing">
+    <p>A profile remembers a preference. A summary remembers a discussion. Verify both in storage and in a genuinely new chat.</p>
+
+  </section>
+  <footer class="doc-footer"><span>Microsoft Foundry One-Day Workshop</span></footer>
+</div>
+</body>
+</html>

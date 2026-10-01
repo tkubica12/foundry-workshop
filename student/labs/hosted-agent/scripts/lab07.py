@@ -14,7 +14,7 @@ from urllib.parse import urlsplit
 
 from azure.ai.projects import AIProjectClient
 from azure.ai.projects.models import (
-    AgentEndpointProtocol, ContainerConfiguration, HostedAgentDefinition, ProtocolVersionRecord,
+    AgentEndpointProtocol, AgentVersionStatus, ContainerConfiguration, HostedAgentDefinition, ProtocolVersionRecord,
 )
 from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 from azure.identity import AzureCliCredential
@@ -101,11 +101,16 @@ def checked_version(project, config, receipt):
     return version
 
 
+def version_status(version) -> str:
+    status = version.status
+    return status.value if isinstance(status, AgentVersionStatus) else status
+
+
 def wait_active(project, config, receipt, timeout):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         version = checked_version(project, config, receipt)
-        status = str(version.status)
+        status = version_status(version)
         receipt["status"] = status
         save(receipt["_path"], {k: v for k, v in receipt.items() if k != "_path"})
         print("Version", receipt["version"], "status", status, flush=True)
@@ -145,7 +150,7 @@ def run(args):
     print("Scope:", config["agent_name"], config["image"], flush=True)
     print("No backend, toolbox, model, shared registry or role changes.", flush=True)
     with AIProjectClient(
-        endpoint=config["project_endpoint"], credential=AzureCliCredential(),
+        endpoint=config["project_endpoint"], credential=AzureCliCredential(process_timeout=60),
         allow_preview=True,
         retry_total=0, connection_timeout=20, read_timeout=90,
     ) as project:
@@ -183,7 +188,7 @@ def run(args):
                 metadata={"lab07_owner": config["owner"], "lab07_config": fingerprint(config)},
                 description="Optional Lab 07: read-only LangGraph instrument specialist",
             )
-            receipt.update(version=str(version.version), status=str(version.status))
+            receipt.update(version=str(version.version), status=version_status(version))
             save(state, receipt)
             wait_active(project, config, {**receipt, "_path": state}, args.timeout)
         elif args.operation == "status":

@@ -1,9 +1,40 @@
 # Public baseline validation and delivery boundaries
 
-The public site publishes Labs 1 through 5 as HTML reading guides only.
+The public site publishes Labs 1 through 6 and optional Lab 7 as HTML reading guides only.
 The one-day timetable is a design target; future labs and showcases remain
 unpublished or separately qualified. Historical private evidence is not
 distributed and does not certify this checkout or a new cloud environment.
+
+## Optional Lab 7, 2026-10-01
+
+The published GHCR image passed anonymous pull and activated directly in two
+isolated Hosted Agents with the same digest. Both operator-seat journeys
+completed individually approved reads through the existing complaint and
+partner tools. Answers were checked against actual recorded tool results.
+Both rejection chains failed explicitly without an executed tool result.
+Application Insights contained correlated hosting, LangGraph, model and tool
+spans, arguments, results and parent links. No shared roles or services changed
+and no ACR fallback was needed.
+
+Status, repeat deployment, new-conversation reset and exact-version cleanup
+passed; both recorded versions were verified absent. Agent shells, shared
+resources and monitoring/checkpoint retention intentionally remain. Fresh
+learner/educator and source/reproducibility review found no material issue in
+the prepared operator path. Native trace-viewer navigation, attendee identities,
+room concurrency and the full 45-minute timebox remain unqualified. See the
+[qualification record](../student/labs/hosted-agent/VALIDATION.md), including the
+pinned SDK's visible interrupt/resume callback warnings.
+
+## Lab 6, 2026-10-01
+
+Native portal rehearsal verified the no-memory baseline, store creation with
+profile and summary extraction, per-user scope, saved attachment, stored
+`user_profile` and `chat_summary` rows, and both fresh-chat recalls. The second
+recall included the reusable-box detail, not just the apple preference.
+Only the temporary run-owned agent and store were deleted; both names were
+verified absent from refreshed lists. Attendee permissions, room concurrency
+and the 20-minute timebox remain unqualified. See the
+[qualification record](../student/labs/managed-memory/VALIDATION.md).
 
 ## Lab 5, 2026-09-30
 

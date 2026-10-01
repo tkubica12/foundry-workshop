@@ -1,0 +1,324 @@
+<!doctype html>
+<!--
+MIT License
+
+Copyright (c) 2026 Tomáš Kubica
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<html lang="en" data-default-accent="blue">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Host a code-first LangGraph agent - optional Lab 7</title>
+<meta name="description" content="Deploy a prepared LangGraph image to Microsoft Foundry, approve a read through existing MCP tools and follow its traces.">
+<meta name="doc-id" content="foundry-chapter-7-hosted-agent">
+<script data-doc-bootstrap>
+/* Inline in the head before styles with sync-head.js. No deferred bootstrap. */
+(() => {
+  "use strict";
+  const root = document.documentElement;
+  const params = new URLSearchParams(location.search);
+  const id = document.querySelector('meta[name="doc-id"]')?.content ||
+    location.pathname.replace(/\.standalone(?=\.html$)/i, "");
+  const prefix = "html-docs:" + id + ":";
+  const choices = { theme: ["light", "dark"], accent: ["blue", "red", "green", "yellow"] };
+  const read = (name) => {
+    try { return localStorage.getItem(prefix + name); }
+    catch { return null; /* Storage may be unavailable for local files. */ }
+  };
+  const write = (name, value) => {
+    try { localStorage.setItem(prefix + name, value); }
+    catch { /* The current view still works without persistence. */ }
+  };
+  function refresh() {
+    for (const name of Object.keys(choices)) {
+      const current = root.getAttribute("data-" + name);
+      const next = choices[name][(choices[name].indexOf(current) + 1) % choices[name].length];
+      document.querySelectorAll('[data-action="toggle-' + name + '"]').forEach(button => {
+        button.textContent = name === "theme" ? (next === "dark" ? "Dark" : "Light") :
+          "Accent: " + current[0].toUpperCase() + current.slice(1);
+        button.setAttribute("aria-label", name === "theme" ? "Switch to " + next + " theme" :
+          "Accent: " + current + ". Switch to " + next);
+      });
+    }
+  }
+  for (const [name, values] of Object.entries(choices)) {
+    const fallback = name === "theme" && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : values[0];
+    const value = [params.get(name), read(name), root.getAttribute("data-default-" + name), fallback]
+      .map(candidate => name === "accent" && candidate === "orange" ? "red" : candidate)
+      .find(candidate => values.includes(candidate));
+    root.setAttribute("data-" + name, value);
+  }
+  root.classList.add("js");
+  if (["slides", "sheet"].includes(params.get("view"))) root.setAttribute("data-view", params.get("view"));
+
+  // Print what is on screen. data-print selects the matching print stylesheet.
+  const printTarget = () => {
+    if (document.querySelector(".deck-stage")) return "slides";
+    const view = root.getAttribute("data-view");
+    if (view === "slides" || (view === "sheet" && document.querySelector(".sheet"))) return view;
+    return document.querySelector(".doc") || !document.querySelector(".sheet") ? "read" : "sheet";
+  };
+  let printing = null;
+  addEventListener("beforeprint", () => {
+    if (root.hasAttribute("data-print")) return; // Set by an automated export.
+    const target = printTarget();
+    printing = document.title;
+    root.setAttribute("data-print", target);
+    // The browser proposes the title as the PDF file name.
+    if (target !== "read" && document.querySelector(".doc")) {
+      document.title += target === "slides" ? " - Slides" : " - Sheet";
+    }
+  });
+  addEventListener("afterprint", () => {
+    if (printing === null) return;
+    root.removeAttribute("data-print");
+    document.title = printing;
+    printing = null;
+  });
+
+  // Keep the display awake while presenting, like presentation software does.
+  let lock = null;
+  let awake = false;
+  async function holdScreen() {
+    if (!awake || lock || document.visibilityState !== "visible" || !navigator.wakeLock) return;
+    try {
+      const sentinel = await navigator.wakeLock.request("screen");
+      if (!awake || lock) { sentinel.release(); return; }
+      lock = sentinel;
+      root.setAttribute("data-awake", "");
+      sentinel.addEventListener("release", () => {
+        if (lock !== sentinel) return;
+        lock = null;
+        root.removeAttribute("data-awake");
+      });
+    } catch { /* Denied by battery saver or an embedding policy; retried on input. */ }
+  }
+  function keepAwake(on) {
+    awake = !!on;
+    if (awake) holdScreen();
+    else if (lock) lock.release();
+  }
+  // The browser drops the lock when the tab is hidden; some require a gesture.
+  document.addEventListener("visibilitychange", holdScreen);
+  document.addEventListener("pointerdown", holdScreen);
+  document.addEventListener("keydown", holdScreen);
+
+  window.HtmlDocs = { read, write, refresh, keepAwake };
+  document.addEventListener("DOMContentLoaded", refresh);
+  document.addEventListener("click", event => {
+    if (event.target.closest('[data-action="print"]')) window.print();
+  });
+  document.addEventListener("click", event => {
+    const button = event.target.closest('[data-action="toggle-theme"], [data-action="toggle-accent"]');
+    if (!button) return;
+    const name = button.getAttribute("data-action").slice(7);
+    const values = choices[name];
+    const next = values[(values.indexOf(root.getAttribute("data-" + name)) + 1) % values.length];
+    root.setAttribute("data-" + name, next);
+    write(name, next);
+    // Replace a URL override too, so reloading preserves a deliberate change.
+    const url = new URL(location.href);
+    if (url.searchParams.has(name)) {
+      url.searchParams.set(name, next);
+      history.replaceState(null, "", url.href);
+    }
+    refresh();
+  });
+})();
+</script>
+<style data-doc-tokens>
+/* Canonical tokens. Inline with sync-head.js; one accent family at a time. */
+:root {
+  color-scheme: light;
+  --bg: #fafafa; --surface: #ffffff; --surface-2: #f2f2f2; --surface-3: #e8e8e8;
+  --border: #dedede; --border-strong: #b8b8b8;
+  --text: #161616; --text-muted: #565656; --text-faint: #686868;
+  --accent-light: #006da0; --accent-dark: #00a4ef;
+  --accent: var(--accent-light);
+  --accent-strong: var(--accent);
+  --accent-quiet: var(--accent);
+  --accent-soft: color-mix(in srgb, var(--accent) 9%, var(--bg));
+  --accent-border: color-mix(in srgb, var(--accent) 36%, var(--bg));
+  --warn: var(--accent); --warn-soft: var(--accent-soft); --warn-border: var(--accent-border);
+  --code-bg: var(--surface-2); --code-border: var(--border);
+  --focus: var(--accent);
+  --shadow-1: 0 1px 2px rgba(0,0,0,.04);
+  --shadow-2: 0 2px 4px rgba(0,0,0,.04), 0 12px 28px rgba(0,0,0,.06);
+  --radius: 10px; --radius-sm: 6px; --canvas: 1160px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Cascadia Mono", "Cascadia Code", ui-monospace, Consolas, "SF Mono", "Liberation Mono", Menlo, monospace;
+}
+/* Screen only: every PDF and printout uses the light palette. */
+@media screen {
+  [data-theme="dark"], :root:not([data-theme])[data-default-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101010; --surface: #191919; --surface-2: #232323; --surface-3: #2c2c2c;
+    --border: #363636; --border-strong: #595959;
+    --text: #f2f2f2; --text-muted: #b5b5b5; --text-faint: #a0a0a0;
+    --accent: var(--accent-dark);
+    --shadow-1: 0 1px 2px rgba(0,0,0,.3);
+    --shadow-2: 0 2px 4px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.4);
+  }
+}
+[data-accent="red"], :root:not([data-accent])[data-default-accent="red"],
+[data-accent="orange"], :root:not([data-accent])[data-default-accent="orange"] {
+  --accent-light: #bc3a16; --accent-dark: #f25022;
+}
+[data-accent="green"], :root:not([data-accent])[data-default-accent="green"] {
+  --accent-light: #4c7100; --accent-dark: #7fba00;
+}
+[data-accent="yellow"], :root:not([data-accent])[data-default-accent="yellow"] {
+  --accent-light: #805b00; --accent-dark: #ffb900;
+}
+</style>
+<link rel="stylesheet" href="../assets/html-docs/article.css">
+<link rel="stylesheet" href="../assets/document-navigation.css">
+<link rel="stylesheet" href="../assets/lab-articles.css">
+<script src="../assets/html-docs/article.js" defer></script>
+<script src="../assets/lab-articles.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#content">Skip to the exercise</a>
+<div class="controls" role="group" aria-label="Article controls">
+  <button type="button" class="ctrl" data-action="expand-all">Expand all</button>
+  <button type="button" class="ctrl" data-action="collapse-all">Collapse all</button>
+  <button type="button" class="ctrl" data-action="print">PDF</button>
+  <button type="button" class="ctrl" data-action="toggle-theme">Dark</button>
+  <button type="button" class="ctrl" data-action="toggle-accent">Accent: Blue</button>
+</div>
+<div class="doc">
+  <header class="doc-header" id="opening">
+
+    <p class="eyebrow">Chapter 7 &middot; Optional &middot; Code-first</p>
+    <h1>Host a code-first LangGraph agent</h1>
+    <p class="subtitle">Deploy one prepared image. Approve a read through the same MCP tools as Lab 4, then follow the request from the hosting boundary to the model and tools.</p>
+    <ul class="lab-meta">
+      <li><strong>Time</strong>45 minutes estimated core; keep recovery outside the core</li>
+      <li><strong>Environment</strong>Assigned Foundry project, prepared terminal, existing MCP services and monitoring</li>
+      <li><strong>Outcome</strong>A hosted read-only specialist and evidence for its tool decisions</li>
+    </ul>
+  </header>
+  <nav class="doc-nav" aria-label="Workshop navigation"><a href="../index.html">Workshop index</a><a href="chapter-4-connect-tools.html">MCP reference</a><a href="chapter-6-managed-memory.html">Chapter 6: Memory</a></nav>
+  <nav class="toc" aria-label="Contents"><p class="toc-label">Contents</p><ol>
+    <li><a href="#ch-prepare">Prepare</a></li><li><a href="#ch-code">Read the code</a></li>
+    <li><a href="#ch-deploy">Deploy</a></li><li><a href="#ch-read">Approve a read</a></li>
+    <li><a href="#ch-traces">Connect the traces</a></li><li><a href="#ch-recovery">Reset and cleanup</a></li>
+  </ol></nav>
+  <main id="content" tabindex="-1">
+    <section class="chapter" id="ch-prepare"><h2 class="chapter-label">Prepare / 5 minutes</h2>
+      <article class="card card--lead" id="card-preflight" data-open>
+        <h3 class="card-head"><button class="card-toggle" type="button" aria-expanded="true"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Start with an assigned, isolated deployment</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+        <div class="card-body">
+          <p>This lab is optional. Complete the <a href="chapter-4-connect-tools.html#ch-prepare">Lab 4 tool preflight</a> first. Use fictional instrument-service records only. Lab 6 is the final mandatory lab; this specialist demonstrates another implementation path, not a replacement for managed Memory.</p>
+          <p><strong>See it:</strong> watch a short facilitator run: a pending read, one approved call, a verified answer and the matching trace. Compare it with Lab 4: the business tools are the same, but the model/tool loop and approval boundary now live in your LangGraph code. Use the remaining core time to deploy and inspect your own instance.</p>
+          <ol class="steps">
+            <li><p>Open the prepared repository terminal at its root. Confirm Python 3.13, <code>uv</code> and Azure CLI are installed and the lab dependencies are already restored from the approved feed. The commands below use PowerShell paths.</p></li>
+            <li><p>Run <code>az account show --query "{tenant:tenantId,subscription:id}" -o json</code>. Compare both identifiers with your private seat assignment. Sign in with the assigned account if needed; never substitute an administrator account.</p></li>
+            <li><p>Open your prepared <code>.workshop\hosted-agent\seat.config.json</code>. Verify project URL, project ARM ID, unique <code>lab07-&lt;run&gt;-sNN</code> name, existing model deployment, pinned toolbox endpoint and immutable image digest. Do not paste this file into a public issue or shared document.</p></li>
+            <li><p>Confirm the facilitator has qualified Hosted Agent capacity, runtime model/tool permissions and connected Application Insights. For deployment, confirm Foundry Project Manager; for trace viewing, confirm the assigned monitoring read access. Registry and identity setup are prepared, not part of the core lab.</p></li>
+          </ol>
+          <div class="code" id="preflight-command"><p class="code-label">Check configuration and project access</p><pre><code>uv run --project student\labs\hosted-agent python student\labs\hosted-agent\scripts\lab07.py preflight --config .workshop\hosted-agent\seat.config.json --state .workshop\hosted-agent\seat.state.json</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy aria-label="Copy preflight command">Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
+          <div class="checkpoint"><span class="checkpoint__label">Check</span><p>See the exact seat scope and <code>PASS: configuration and project access</code>. This does not prove runtime authorization or telemetry. Stop for facilitator help if your assignment or permissions differ.</p></div>
+        </div>
+      </article>
+    </section>
+    <section class="chapter" id="ch-code"><h2 class="chapter-label">Read the code / 7 minutes</h2>
+      <article class="card" id="card-graph">
+        <h3 class="card-head"><button class="card-toggle" type="button" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">The framework controls execution, not just the prompt</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+        <div class="card-body">
+          <p>Open <code>student\labs\hosted-agent\agent.py</code> and <code>system-prompt.txt</code> in your editor. Find <code>build_graph</code>, <code>select_tools</code>, <code>approve_call</code> and <code>serve</code>. LangChain's <code>create_agent</code> factory builds the LangGraph; <code>ResponsesHostServer</code> adapts that compiled graph to Foundry's Responses protocol.</p>
+          <ol class="steps">
+            <li><p>Follow the model &rarr; tool decision &rarr; approval interrupt &rarr; MCP result &rarr; answer path. The system prompt asks for verified complaint and partner facts. The interceptor stops execution <em>before</em> the remote call.</p></li>
+            <li><p>Compare the seven tool names with Lab 4. Four reads require individual approval. The three write tools remain discoverable but fail with <code>LAB07_WRITE_DENIED</code>, even if a user asks for them. Do not edit shared seed records.</p></li>
+            <li><p>Find the hosted <code>FoundryCheckpointSaver</code> and <code>AzureAIOpenTelemetryTracer</code>. Checkpoint storage preserves pending approvals; telemetry records execution. Neither is the user-profile or chat-summary Memory from Lab 6.</p></li>
+          </ol>
+          <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Explain why changing the prompt cannot bypass the write boundary, and why approval state must outlive one HTTP request.</p></div>
+          <div class="reveal"><button type="button" class="reveal-toggle" aria-expanded="false">Image and dependency boundary</button><div class="reveal-body"><p>GitHub Actions builds Linux/amd64 from the hashed lock, tests the actual Responses host with an offline fixture and publishes to GHCR. Your seat consumes a verified digest, not <code>latest</code>. Offline tests prove protocol behavior; only live model/tool calls and recorded traces establish the cloud path.</p></div></div>
+        </div>
+      </article>
+    </section>
+    <section class="chapter" id="ch-deploy"><h2 class="chapter-label">Deploy / 8 minutes target</h2>
+      <article class="card" id="card-publish">
+        <h3 class="card-head"><button class="card-toggle" type="button" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Publish the prepared image as your own hosted version</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+        <div class="card-body">
+          <p>Review the scope printed by preflight. The command below creates only your isolated agent version; it does not deploy models, change roles or rebuild the MCP backends. The image is already built, so Docker is not required on your computer.</p>
+          <div class="code" id="deploy-command"><p class="code-label">Authorize your assigned version</p><pre><code>uv run --project student\labs\hosted-agent python student\labs\hosted-agent\scripts\lab07.py deploy --config .workshop\hosted-agent\seat.config.json --state .workshop\hosted-agent\seat.state.json --confirm</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy aria-label="Copy deploy command">Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
+          <p>Wait for <code>status active</code>. Polling is bounded to ten minutes; this is not a latency guarantee. Open <a href="https://ai.azure.com">ai.azure.com</a>, select the assigned project and find the exact name under <strong>Build &rarr; Agents</strong>. Compare its version and hosted definition with your local receipt.</p>
+          <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Record the agent name, version and image digest privately. Active infrastructure is not proof that the model or MCP path works. If deployment exceeds the target, use the recovery path rather than consume the trace-inspection time.</p></div>
+        </div>
+      </article>
+    </section>
+    <section class="chapter" id="ch-read"><h2 class="chapter-label">Approve a read / 10 minutes</h2>
+      <article class="card" id="card-read">
+        <h3 class="card-head"><button class="card-toggle" type="button" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">One approval authorizes one exact tool call</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+        <div class="card-body">
+          <p>Use the terminal's Responses client so the approval boundary is explicit. It sends the Lab 4 read-only prompt for <code>complaint-003</code> to your named Hosted Agent endpoint.</p>
+          <div class="code" id="start-command"><p class="code-label">Start a new read-only conversation</p><pre><code>uv run --project student\labs\hosted-agent python student\labs\hosted-agent\scripts\invoke.py start --config .workshop\hosted-agent\seat.config.json --state .workshop\hosted-agent\seat.state.json --conversation .workshop\hosted-agent\read.json</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy aria-label="Copy start command">Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
+          <ol class="steps">
+            <li><p>Read the requested tool name and JSON arguments. Check that it is a read of the intended synthetic complaint or an eligibility search. Copy the printed <strong>Approval ID</strong>.</p></li>
+            <li><p>Replace <code>APPROVAL-ID</code> in the next command with that exact ID. Approve only after reviewing the call. Repeat with each newly printed ID; never reuse an earlier ID or approve all future calls.</p></li>
+          </ol>
+          <div class="code" id="approve-command"><p class="code-label">Approve the displayed call once</p><pre><code>uv run --project student\labs\hosted-agent python student\labs\hosted-agent\scripts\invoke.py approve --config .workshop\hosted-agent\seat.config.json --state .workshop\hosted-agent\seat.state.json --conversation .workshop\hosted-agent\read.json --approval-id APPROVAL-ID</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy aria-label="Copy approval command">Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
+          <p>After the approved answer, run the start command again with a new conversation filename <code>reject.json</code>. For its first pending read, replace <code>approve</code> with <code>reject</code> in the approval command, use <code>reject.json</code> and its current Approval ID. Expect a failed response with <code>interrupt_rejected</code>; rejection is not a successful tool call. Keep both conversations for trace inspection.</p>
+          <div class="checkpoint"><span class="checkpoint__label">Check</span><p>The approved answer includes <code>complaint-003</code>, a returned partner ID and active/country/instrument/service eligibility facts. The rejected conversation fails explicitly. The next section verifies the answer against actual tool results; a plausible answer alone does not pass.</p></div>
+        </div>
+      </article>
+    </section>
+    <section class="chapter" id="ch-traces"><h2 class="chapter-label">Connect the traces / 10 minutes</h2>
+      <article class="card" id="card-evidence">
+        <h3 class="card-head"><button class="card-toggle" type="button" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">A visible answer is only one piece of evidence</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+        <div class="card-body">
+          <ol class="steps">
+            <li><p>Record the printed Response ID and Trace ID for the initial turn and each approval continuation. Open the selected agent's <strong>Traces</strong> view in Foundry. Search by Response ID or Trace ID and widen the time window if needed.</p></li>
+            <li><p>Open the connected Application Insights resource in the assigned Azure portal subscription. Under <strong>Investigate &rarr; Transaction search</strong>, find the request by its operation/trace ID. Compare the hosting request, LangGraph execution, model call and MCP tool spans within each turn.</p></li>
+            <li><p>Find a complaint-service call and a partner-service call. Compare tool name, arguments, result and duration with the terminal's approvals and the final answer. Approval continuation is another HTTP turn and can have a different trace; link turns using their saved Responses chain, not by claiming one trace spans every approval.</p></li>
+            <li><p>Confirm a rejected turn has no executed MCP call after the rejection. If spans or content are absent, distinguish missing viewer access, ingestion delay and instrumentation/export failure. Do not replace a missing trace with an inferred success.</p></li>
+          </ol>
+          <p>An approval interrupt can appear as a stopped or failed tool span without a tool result. That does not prove remote execution. Verify the successful resumed span and its recorded result; do not count duplicate instrumentation spans as separate business calls.</p>
+          <p>Content recording is enabled only in a facilitator-approved synthetic environment. Model identities, runtime identities and trace-reader permissions are separate responsibilities. Never turn on content capture for private business data as a shortcut.</p>
+          <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Show actual model and tool evidence tied to your response. Explain which boundary is managed by Foundry and which behavior remains your code's responsibility.</p></div>
+        </div>
+      </article>
+    </section>
+    <section class="chapter" id="ch-recovery"><h2 class="chapter-label">Reset and cleanup / 5 minutes</h2>
+      <article class="card" id="card-recovery">
+        <h3 class="card-head"><button class="card-toggle" type="button" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Resume known state; do not repeat an uncertain create</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+        <div class="card-body">
+          <p><strong>Activation timeout:</strong> run the status command. <strong>Failed activation or runtime 403:</strong> retain your receipts and ask the facilitator to check provisioning or the dedicated agent identity. Do not create substitute resources or grant broad permissions.</p>
+          <div class="code" id="status-command"><p class="code-label">Inspect the existing version</p><pre><code>uv run --project student\labs\hosted-agent python student\labs\hosted-agent\scripts\lab07.py status --config .workshop\hosted-agent\seat.config.json --state .workshop\hosted-agent\seat.state.json</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy aria-label="Copy status command">Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
+          <p><strong>Uncertain create or turn:</strong> stop if a receipt says <code>create-requested</code> without a version, or a <code>.pending.json</code> file remains after a client error. Give the facilitator the correlation or trace ID. Do not delete the receipt and replay blindly. <strong>Reset:</strong> use a new conversation filename such as <code>read-2.json</code>; leave old evidence intact. <strong>Resume:</strong> keep the same conversation file and use only its current approval ID.</p>
+          <p><strong>Conversation locked:</strong> wait for the owning command. After a confirmed terminated process, ask the facilitator to inspect the pending receipt and live response before removing that exact lock; do not remove a live command's lock.</p>
+          <p>When finished, compare your deployment receipt with your assigned name. The next command deletes only the recorded version and its sessions. It retains the agent shell, other versions, shared toolbox, MCP backends, connections, registry, image and roles.</p>
+          <div class="code" id="cleanup-command"><p class="code-label">Delete only your recorded version</p><pre><code>uv run --project student\labs\hosted-agent python student\labs\hosted-agent\scripts\lab07.py cleanup --config .workshop\hosted-agent\seat.config.json --state .workshop\hosted-agent\seat.state.json --confirm</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy aria-label="Copy cleanup command">Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
+          <p>Checkpoint and monitoring retention are separate from version deletion. Leave shared data-retention cleanup to the facilitator; never delete a shared project or registry.</p>
+          <div class="reveal"><button type="button" class="reveal-toggle" aria-expanded="false">Optional extension: change the implementation</button><div class="reveal-body"><p>In your own authorized fork, edit the system prompt or graph, run the isolated tests, publish through the workflow and consume the new verified digest in a new seat configuration/name. Keep the existing evidence and do not overwrite another seat. A code change requires a new image: changing a local prompt file does not modify the running container. Read <a href="https://learn.microsoft.com/azure/foundry/how-to/develop/langchain-hosted-agents">the hosting integration</a> and <a href="https://learn.microsoft.com/azure/foundry/agents/how-to/deploy-hosted-agent">deployment guidance</a>, consulted 1 October 2026. Keep write-tool extensions out of this lab's scope.</p></div></div>
+        </div>
+      </article>
+    </section>
+  </main>
+  <section class="takeaway" id="closing">
+    <p>Your code owns execution and approvals. Foundry hosts it; actual traces show what happened.</p>
+
+  </section>
+  <footer class="doc-footer"><span>Microsoft Foundry One-Day Workshop</span></footer>
+</div>
+</body>
+</html>

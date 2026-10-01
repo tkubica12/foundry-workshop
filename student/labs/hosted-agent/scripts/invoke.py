@@ -10,7 +10,7 @@ from azure.core.exceptions import HttpResponseError
 from azure.identity import AzureCliCredential
 from openai import APIConnectionError, APIStatusError, APITimeoutError
 
-from lab07 import checked_version, fingerprint, private_path, read_config, save
+from lab07 import checked_version, fingerprint, private_path, read_config, save, version_status
 
 PROMPT = (
     "Read complaint-003. Summarize its instrument, issue and status. Find an active partner "
@@ -44,6 +44,7 @@ def run(args):
         if args.approval_id:
             raise ValueError("An approval ID is valid only for approve/reject")
         request = {"input": args.prompt}
+        turns = []
     else:
         conversation = json.loads(conversation_path.read_text(encoding="utf-8"))
         if conversation.get("config") != fingerprint(config):
@@ -56,6 +57,7 @@ def run(args):
             "input": [{"type": "mcp_approval_response", "approval_request_id": args.approval_id,
                        "approve": args.operation == "approve"}],
         }
+        turns = conversation.get("turns", [])
     trace_id = secrets.token_hex(16)
     traceparent = f"00-{trace_id}-{secrets.token_hex(8)}-01"
     # Persist intent before sending; an uncertain result is not safe to replay.
@@ -64,10 +66,10 @@ def run(args):
         raise RuntimeError("Previous turn outcome is uncertain; inspect its pending receipt instead of replaying")
     with intent.open("x", encoding="utf-8") as stream:
         json.dump({"operation": args.operation, "trace_id": trace_id, "config": fingerprint(config)}, stream)
-    with AIProjectClient(endpoint=config["project_endpoint"], credential=AzureCliCredential(),
+    with AIProjectClient(endpoint=config["project_endpoint"], credential=AzureCliCredential(process_timeout=60),
                          allow_preview=True, retry_total=0) as project:
         version = checked_version(project, config, receipt)
-        if str(version.status) != "active":
+        if version_status(version) != "active":
             raise RuntimeError("Recorded version is not active")
         versions = list(project.agents.list_versions(config["agent_name"]))
         if len(versions) != 1 or str(versions[0].version) != receipt["version"]:
@@ -77,9 +79,15 @@ def run(args):
                 **request, stream=False, extra_headers={"traceparent": traceparent},
             )
             response = raw.parse().model_dump(mode="json", exclude_none=True)
+            turns.append({
+                "operation": args.operation, "trace_id": trace_id,
+                "response_id": response["id"],
+                "previous_response_id": request.get("previous_response_id"),
+                "request_id": raw.headers.get("x-ms-request-id"),
+            })
             save(conversation_path, {"config": fingerprint(config), "trace_id": trace_id,
                                      "request_id": raw.headers.get("x-ms-request-id"),
-                                     "response": response})
+                                     "response": response, "turns": turns})
             intent.unlink()
     print("Trace ID:", trace_id)
     print("Response ID:", response["id"])

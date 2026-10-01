@@ -3,7 +3,7 @@
 A customer-neutral workshop for professional builders: see an agent in action,
 build and evaluate it, then connect the experience to production architecture.
 All exercises use fictional data. This is a development baseline, not a fully
-qualified delivery package; Labs 1 through 5 have published guides.
+qualified delivery package; Labs 1 through 6 and optional Lab 7 have published guides.
 Lab 4's portal journey still needs an attendee-identity rehearsal.
 
 ## Start here
@@ -14,6 +14,8 @@ Lab 4's portal journey still needs an attendee-identity rehearsal.
 - [Lab 3: Evaluate and improve](docs/guides/chapter-3-evaluate-agent.html)
 - [Lab 4: Connect tools](docs/guides/chapter-4-connect-tools.html)
 - [Lab 5: Ground with knowledge](docs/guides/chapter-5-knowledge-base.html)
+- [Lab 6: Add managed memory](docs/guides/chapter-6-managed-memory.html)
+- [Lab 7: Host a LangGraph agent (optional)](docs/guides/chapter-7-hosted-agent.html)
 - [Workshop sequence](AGENDA.md)
 - [Synthetic instrument PDF corpus](data/instruments/) · [Grounding eval dataset](evals/grounding/)
 
@@ -22,6 +24,7 @@ Lab 4's portal journey still needs an attendee-identity rehearsal.
 - [Active roadmap](PLAN.md)
 - [Local validation and live qualification limits](teacher/VALIDATION.md)
 - [Lab 4 toolbox preparation and qualification](student/labs/connect-tools/README.md)
+- [Lab 7 image delivery and qualification](student/labs/hosted-agent/README.md)
 - [Repository instructions](AGENTS.md) · [Architecture decisions](docs/adr/)
 
 ## Preview

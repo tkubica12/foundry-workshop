@@ -23,6 +23,8 @@ ENTRY_POINTS = {
     "guides/chapter-3-evaluate-agent.html": "Lab 3: Evaluate and improve",
     "guides/chapter-4-connect-tools.html": "Lab 4: Connect tools",
     "guides/chapter-5-knowledge-base.html": "Lab 5: Ground with knowledge",
+    "guides/chapter-6-managed-memory.html": "Lab 6: Add managed memory",
+    "guides/chapter-7-hosted-agent.html": "Lab 7: Host a LangGraph agent",
 }
 WORKSHOP_PAGES = [DOCS / "index.html", *(DOCS / "guides").glob("*.html")]
 
@@ -74,14 +76,14 @@ def test_index_publishes_exactly_the_implemented_entry_points():
 
 def test_future_labs_are_named_without_dead_links():
     text = (DOCS / "index.html").read_text(encoding="utf-8")
-    assert "Lab 6: Hosted specialist" in text
+    assert "Lab 8: Publish an agent to Teams (optional)" in text
     assert "This lab is not available yet." in text
     assert 'data-action="toggle-slides"' not in text
     assert 'data-action="expand-all"' not in text
     assert ".workshop" not in text
 
 
-@pytest.mark.parametrize("chapter", [1, 2, 4, 5])
+@pytest.mark.parametrize("chapter", [1, 2, 4, 5, 6, 7])
 def test_lab_card_duration_matches_the_guide(chapter):
     href = next(href for href in ENTRY_POINTS if f"chapter-{chapter}-" in href)
     guide = (DOCS / href).read_text(encoding="utf-8")
