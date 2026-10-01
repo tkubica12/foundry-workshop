@@ -85,7 +85,7 @@ def test_canonical_template_validator(deck_path, viewport):
         text=True, capture_output=True, timeout=300, check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "all six palettes" in result.stdout
+    assert "all eight palettes" in result.stdout
 
 
 def test_keyboard_deeplink_click_fragments_and_focus(browser, deck_path):

@@ -84,10 +84,14 @@ HTML is the source format for all attendee-facing material:
 
 Do not use Markdown as the primary attendee experience.
 
+Student labs are HTML reading guides only. Do not add Slides, Sheet or one-pager
+views to a lab. Use the reading-only `templates/lab-guide-template.html`; reserve
+the separate slide-deck template for teacher presentations.
+
 ### Visual system
 
 - Support light and dark modes. Respect `prefers-color-scheme` and provide a persistent manual toggle.
-- Use black, white, and grayscale plus Microsoft blue as the only accent family. Default accent: `#0078D4`; shades are allowed.
+- Use black, white, grayscale and the canonical vendored HTML-docs tokens. Blue is the default accent; preserve the owner-approved reader-selectable canonical families, one at a time, as recorded in ADR 0009. Do not hand-edit palette values in document heads.
 - Keep layouts clean, spacious, restrained, and Microsoft-inspired.
 - Use typography, spacing, scale, and motion intentionally. Avoid decorative clutter.
 - Do not use Unicode emojis.

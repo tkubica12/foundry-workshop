@@ -18,9 +18,13 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 DOCS = REPO_ROOT / "docs"
 EVIDENCE = REPO_ROOT / "evidence" / "ui-navigation"
 ENTRY_POINTS = {
+    "guides/chapter-1-foundry-setup.html": "Lab 1: Create a project and deploy models",
     "guides/chapter-2-build-agent.html": "Lab 2: Build an agent",
     "guides/chapter-3-evaluate-agent.html": "Lab 3: Evaluate and improve",
+    "guides/chapter-4-connect-tools.html": "Lab 4: Connect tools",
+    "guides/chapter-5-knowledge-base.html": "Lab 5: Ground with knowledge",
 }
+WORKSHOP_PAGES = [DOCS / "index.html", *(DOCS / "guides").glob("*.html")]
 
 
 @pytest.fixture(scope="module")
@@ -63,33 +67,34 @@ def test_index_publishes_exactly_the_implemented_entry_points():
     for href in links:
         local_target(DOCS / "index.html", href)
     assert {"labs", "up-next"} <= index.ids
-    assert set(path.relative_to(DOCS).as_posix() for path in DOCS.rglob("*.html")) == {
+    assert set(path.relative_to(DOCS).as_posix() for path in WORKSHOP_PAGES) == {
         "index.html", *ENTRY_POINTS,
     }
 
 
 def test_future_labs_are_named_without_dead_links():
     text = (DOCS / "index.html").read_text(encoding="utf-8")
-    assert "Lab 4: Tools" in text
-    assert "Lab 5: Knowledge" in text
-    assert "These labs are not available yet." in text
+    assert "Lab 6: Hosted specialist" in text
+    assert "This lab is not available yet." in text
     assert 'data-action="toggle-slides"' not in text
     assert 'data-action="expand-all"' not in text
     assert ".workshop" not in text
 
 
-def test_chapter_2_card_duration_matches_the_guide():
-    guide = (DOCS / "guides" / "chapter-2-build-agent.html").read_text(encoding="utf-8")
+@pytest.mark.parametrize("chapter", [1, 2, 4, 5])
+def test_lab_card_duration_matches_the_guide(chapter):
+    href = next(href for href in ENTRY_POINTS if f"chapter-{chapter}-" in href)
+    guide = (DOCS / href).read_text(encoding="utf-8")
     duration = re.findall(r"<strong>Time</strong>\s*(\d+)\s+minutes", guide)
-    assert len(duration) == 1, "Chapter 2 guide must declare one total duration"
+    assert len(duration) == 1, "Guide must declare one total duration"
     card = re.search(
-        r'<a href="guides/chapter-2-build-agent\.html">.*?</li>',
+        rf'<a href="{re.escape(href)}">.*?</li>',
         (DOCS / "index.html").read_text(encoding="utf-8"),
         flags=re.DOTALL,
     )
-    assert card, "Chapter 2 must have a linked index card"
+    assert card, "Lab must have a linked index card"
     assert re.findall(r"(\d+)\s+minutes", card.group()) == duration, (
-        "Chapter 2 index duration must match the guide's declared total"
+        "Lab index duration must match the guide's declared total"
     )
 
 
@@ -97,7 +102,7 @@ def test_all_published_local_links_and_assets_are_served(site, browser):
     context = browser.new_context()
     try:
         checked: set[str] = set()
-        for document in sorted(DOCS.rglob("*.html")):
+        for document in sorted(WORKSHOP_PAGES):
             parsed = index_of(document)
             hrefs = [*parsed.links, *parsed.assets, *(image["src"] for image in parsed.images)]
             for href in hrefs:

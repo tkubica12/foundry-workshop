@@ -103,7 +103,7 @@ def test_canonical_article_template_validator(rendered_page, viewport):
         text=True, capture_output=True, timeout=300, check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "all six palettes" in result.stdout
+    assert "all eight palettes" in result.stdout
 
 
 @pytest.mark.parametrize("dark", [False, True], ids=["light", "dark"])
@@ -127,7 +127,7 @@ def test_template_theme_contrast_and_persistence(browser, rendered_page, dark):
         page.locator('[data-action="toggle-accent"]').click()
         page.reload()
         expect(page.locator("html")).to_have_attribute("data-theme", "light" if dark else "dark")
-        expect(page.locator("html")).to_have_attribute("data-accent", "orange")
+        expect(page.locator("html")).to_have_attribute("data-accent", "red")
         assert not errors
     finally:
         context.close()

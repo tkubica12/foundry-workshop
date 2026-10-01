@@ -27,7 +27,7 @@ SOFTWARE.
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>One-day workshop labs - Microsoft Foundry</title>
-<meta name="description" content="Build and evaluate agents in a customer-neutral, one-day Microsoft Foundry workshop for professional builders.">
+<meta name="description" content="Create a Foundry project, deploy models, then build and evaluate agents in a customer-neutral, one-day workshop for professional builders.">
 <meta name="doc-id" content="foundry-workshop">
 <script data-doc-bootstrap>
 /* Inline in the head before styles with sync-head.js. No deferred bootstrap. */
@@ -38,7 +38,7 @@ SOFTWARE.
   const id = document.querySelector('meta[name="doc-id"]')?.content ||
     location.pathname.replace(/\.standalone(?=\.html$)/i, "");
   const prefix = "html-docs:" + id + ":";
-  const choices = { theme: ["light", "dark"], accent: ["blue", "orange", "green"] };
+  const choices = { theme: ["light", "dark"], accent: ["blue", "red", "green", "yellow"] };
   const read = (name) => {
     try { return localStorage.getItem(prefix + name); }
     catch { return null; /* Storage may be unavailable for local files. */ }
@@ -62,13 +62,70 @@ SOFTWARE.
   for (const [name, values] of Object.entries(choices)) {
     const fallback = name === "theme" && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : values[0];
     const value = [params.get(name), read(name), root.getAttribute("data-default-" + name), fallback]
+      .map(candidate => name === "accent" && candidate === "orange" ? "red" : candidate)
       .find(candidate => values.includes(candidate));
     root.setAttribute("data-" + name, value);
   }
   root.classList.add("js");
-  if (params.get("view") === "slides") root.setAttribute("data-view", "slides");
-  window.HtmlDocs = { read, write, refresh };
+  if (["slides", "sheet"].includes(params.get("view"))) root.setAttribute("data-view", params.get("view"));
+
+  // Print what is on screen. data-print selects the matching print stylesheet.
+  const printTarget = () => {
+    if (document.querySelector(".deck-stage")) return "slides";
+    const view = root.getAttribute("data-view");
+    if (view === "slides" || (view === "sheet" && document.querySelector(".sheet"))) return view;
+    return document.querySelector(".doc") || !document.querySelector(".sheet") ? "read" : "sheet";
+  };
+  let printing = null;
+  addEventListener("beforeprint", () => {
+    if (root.hasAttribute("data-print")) return; // Set by an automated export.
+    const target = printTarget();
+    printing = document.title;
+    root.setAttribute("data-print", target);
+    // The browser proposes the title as the PDF file name.
+    if (target !== "read" && document.querySelector(".doc")) {
+      document.title += target === "slides" ? " - Slides" : " - Sheet";
+    }
+  });
+  addEventListener("afterprint", () => {
+    if (printing === null) return;
+    root.removeAttribute("data-print");
+    document.title = printing;
+    printing = null;
+  });
+
+  // Keep the display awake while presenting, like presentation software does.
+  let lock = null;
+  let awake = false;
+  async function holdScreen() {
+    if (!awake || lock || document.visibilityState !== "visible" || !navigator.wakeLock) return;
+    try {
+      const sentinel = await navigator.wakeLock.request("screen");
+      if (!awake || lock) { sentinel.release(); return; }
+      lock = sentinel;
+      root.setAttribute("data-awake", "");
+      sentinel.addEventListener("release", () => {
+        if (lock !== sentinel) return;
+        lock = null;
+        root.removeAttribute("data-awake");
+      });
+    } catch { /* Denied by battery saver or an embedding policy; retried on input. */ }
+  }
+  function keepAwake(on) {
+    awake = !!on;
+    if (awake) holdScreen();
+    else if (lock) lock.release();
+  }
+  // The browser drops the lock when the tab is hidden; some require a gesture.
+  document.addEventListener("visibilitychange", holdScreen);
+  document.addEventListener("pointerdown", holdScreen);
+  document.addEventListener("keydown", holdScreen);
+
+  window.HtmlDocs = { read, write, refresh, keepAwake };
   document.addEventListener("DOMContentLoaded", refresh);
+  document.addEventListener("click", event => {
+    if (event.target.closest('[data-action="print"]')) window.print();
+  });
   document.addEventListener("click", event => {
     const button = event.target.closest('[data-action="toggle-theme"], [data-action="toggle-accent"]');
     if (!button) return;
@@ -94,7 +151,7 @@ SOFTWARE.
   --bg: #fafafa; --surface: #ffffff; --surface-2: #f2f2f2; --surface-3: #e8e8e8;
   --border: #dedede; --border-strong: #b8b8b8;
   --text: #161616; --text-muted: #565656; --text-faint: #686868;
-  --accent-light: #0068bd; --accent-dark: #69b8ff;
+  --accent-light: #006da0; --accent-dark: #00a4ef;
   --accent: var(--accent-light);
   --accent-strong: var(--accent);
   --accent-quiet: var(--accent);
@@ -109,20 +166,27 @@ SOFTWARE.
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "Cascadia Mono", "Cascadia Code", ui-monospace, Consolas, "SF Mono", "Liberation Mono", Menlo, monospace;
 }
-[data-theme="dark"], :root:not([data-theme])[data-default-theme="dark"] {
-  color-scheme: dark;
-  --bg: #101010; --surface: #191919; --surface-2: #232323; --surface-3: #2c2c2c;
-  --border: #363636; --border-strong: #595959;
-  --text: #f2f2f2; --text-muted: #b5b5b5; --text-faint: #a0a0a0;
-  --accent: var(--accent-dark);
-  --shadow-1: 0 1px 2px rgba(0,0,0,.3);
-  --shadow-2: 0 2px 4px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.4);
+/* Screen only: every PDF and printout uses the light palette. */
+@media screen {
+  [data-theme="dark"], :root:not([data-theme])[data-default-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101010; --surface: #191919; --surface-2: #232323; --surface-3: #2c2c2c;
+    --border: #363636; --border-strong: #595959;
+    --text: #f2f2f2; --text-muted: #b5b5b5; --text-faint: #a0a0a0;
+    --accent: var(--accent-dark);
+    --shadow-1: 0 1px 2px rgba(0,0,0,.3);
+    --shadow-2: 0 2px 4px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.4);
+  }
 }
+[data-accent="red"], :root:not([data-accent])[data-default-accent="red"],
 [data-accent="orange"], :root:not([data-accent])[data-default-accent="orange"] {
-  --accent-light: #a94000; --accent-dark: #ffae72;
+  --accent-light: #bc3a16; --accent-dark: #f25022;
 }
 [data-accent="green"], :root:not([data-accent])[data-default-accent="green"] {
-  --accent-light: #137344; --accent-dark: #6cd6a0;
+  --accent-light: #4c7100; --accent-dark: #7fba00;
+}
+[data-accent="yellow"], :root:not([data-accent])[data-default-accent="yellow"] {
+  --accent-light: #805b00; --accent-dark: #ffb900;
 }
 </style>
 <link rel="stylesheet" href="assets/html-docs/article.css">
@@ -144,17 +208,23 @@ SOFTWARE.
 <body>
 <a class="skip-link" href="#content">Skip to the labs</a>
 <div class="controls" role="group" aria-label="Appearance">
+  <button type="button" class="ctrl" data-action="print">PDF</button>
   <button type="button" class="ctrl" data-action="toggle-theme">Dark</button>
+  <button type="button" class="ctrl" data-action="toggle-accent">Accent: Blue</button>
 </div>
 <div class="doc">
   <header class="doc-header">
     <p class="eyebrow">Microsoft Foundry / One-day workshop</p>
     <h1>Workshop labs</h1>
-    <p class="subtitle">One day. One progressive agent journey. Use your prepared seat to build an agent, then measure and improve it.</p>
+    <p class="subtitle">One day. One progressive agent journey. Create a project, build and evaluate an agent, then connect tools and inspect its actions. Follow each lab as an HTML reading guide.</p>
   </header>
   <main id="content" tabindex="-1">
     <nav id="labs" aria-label="Available labs">
       <ol class="lab-list">
+        <li>
+          <h2><a href="guides/chapter-1-foundry-setup.html">Lab 1: Create a project and deploy models</a></h2>
+          <p>20 minutes for the core: create a project in your assigned resource group in Sweden Central, get primary/Luna replies, and submit GLM Flash with custom capacity. Finish pending GLM deployment and hello checks later. Confirm access and quota with your facilitator first.</p>
+        </li>
         <li>
           <h2><a href="guides/chapter-2-build-agent.html">Lab 2: Build an agent</a></h2>
           <p>30 minutes. Compare model replies and inspect a guardrail. Start only after your facilitator confirms your seat is ready.</p>
@@ -163,12 +233,20 @@ SOFTWARE.
           <h2><a href="guides/chapter-3-evaluate-agent.html">Lab 3: Evaluate and improve</a></h2>
           <p>Continue with the agent from Lab 2. Compare a baseline with a deliberate instruction change.</p>
         </li>
+        <li>
+          <h2><a href="guides/chapter-4-connect-tools.html">Lab 4: Connect tools</a></h2>
+          <p>55 minutes. Curate a toolbox from registered MCP services, attach its endpoint, approve a synthetic assignment and inspect its traces. Confirm tool and telemetry access first.</p>
+        </li>
+        <li>
+          <h2><a href="guides/chapter-5-knowledge-base.html">Lab 5: Ground with knowledge</a></h2>
+          <p>45 minutes for the core, plus recovery and discussion. Upload 20 synthetic PDFs, verify a cited answer and compare the same balanced 20 questions. Extend to all 100 after the core.</p>
+        </li>
       </ol>
     </nav>
     <section id="up-next" aria-labelledby="next-heading">
       <h2 id="next-heading">Coming next</h2>
-      <p>Lab 4: Tools &middot; Lab 5: Knowledge</p>
-      <p>These labs are not available yet.</p>
+      <p>Lab 6: Hosted specialist</p>
+      <p>This lab is not available yet.</p>
     </section>
   </main>
 </div>

@@ -38,7 +38,7 @@ SOFTWARE.
   const id = document.querySelector('meta[name="doc-id"]')?.content ||
     location.pathname.replace(/\.standalone(?=\.html$)/i, "");
   const prefix = "html-docs:" + id + ":";
-  const choices = { theme: ["light", "dark"], accent: ["blue", "orange", "green"] };
+  const choices = { theme: ["light", "dark"], accent: ["blue", "red", "green", "yellow"] };
   const read = (name) => {
     try { return localStorage.getItem(prefix + name); }
     catch { return null; /* Storage may be unavailable for local files. */ }
@@ -62,13 +62,70 @@ SOFTWARE.
   for (const [name, values] of Object.entries(choices)) {
     const fallback = name === "theme" && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : values[0];
     const value = [params.get(name), read(name), root.getAttribute("data-default-" + name), fallback]
+      .map(candidate => name === "accent" && candidate === "orange" ? "red" : candidate)
       .find(candidate => values.includes(candidate));
     root.setAttribute("data-" + name, value);
   }
   root.classList.add("js");
-  if (params.get("view") === "slides") root.setAttribute("data-view", "slides");
-  window.HtmlDocs = { read, write, refresh };
+  if (["slides", "sheet"].includes(params.get("view"))) root.setAttribute("data-view", params.get("view"));
+
+  // Print what is on screen. data-print selects the matching print stylesheet.
+  const printTarget = () => {
+    if (document.querySelector(".deck-stage")) return "slides";
+    const view = root.getAttribute("data-view");
+    if (view === "slides" || (view === "sheet" && document.querySelector(".sheet"))) return view;
+    return document.querySelector(".doc") || !document.querySelector(".sheet") ? "read" : "sheet";
+  };
+  let printing = null;
+  addEventListener("beforeprint", () => {
+    if (root.hasAttribute("data-print")) return; // Set by an automated export.
+    const target = printTarget();
+    printing = document.title;
+    root.setAttribute("data-print", target);
+    // The browser proposes the title as the PDF file name.
+    if (target !== "read" && document.querySelector(".doc")) {
+      document.title += target === "slides" ? " - Slides" : " - Sheet";
+    }
+  });
+  addEventListener("afterprint", () => {
+    if (printing === null) return;
+    root.removeAttribute("data-print");
+    document.title = printing;
+    printing = null;
+  });
+
+  // Keep the display awake while presenting, like presentation software does.
+  let lock = null;
+  let awake = false;
+  async function holdScreen() {
+    if (!awake || lock || document.visibilityState !== "visible" || !navigator.wakeLock) return;
+    try {
+      const sentinel = await navigator.wakeLock.request("screen");
+      if (!awake || lock) { sentinel.release(); return; }
+      lock = sentinel;
+      root.setAttribute("data-awake", "");
+      sentinel.addEventListener("release", () => {
+        if (lock !== sentinel) return;
+        lock = null;
+        root.removeAttribute("data-awake");
+      });
+    } catch { /* Denied by battery saver or an embedding policy; retried on input. */ }
+  }
+  function keepAwake(on) {
+    awake = !!on;
+    if (awake) holdScreen();
+    else if (lock) lock.release();
+  }
+  // The browser drops the lock when the tab is hidden; some require a gesture.
+  document.addEventListener("visibilitychange", holdScreen);
+  document.addEventListener("pointerdown", holdScreen);
+  document.addEventListener("keydown", holdScreen);
+
+  window.HtmlDocs = { read, write, refresh, keepAwake };
   document.addEventListener("DOMContentLoaded", refresh);
+  document.addEventListener("click", event => {
+    if (event.target.closest('[data-action="print"]')) window.print();
+  });
   document.addEventListener("click", event => {
     const button = event.target.closest('[data-action="toggle-theme"], [data-action="toggle-accent"]');
     if (!button) return;
@@ -94,7 +151,7 @@ SOFTWARE.
   --bg: #fafafa; --surface: #ffffff; --surface-2: #f2f2f2; --surface-3: #e8e8e8;
   --border: #dedede; --border-strong: #b8b8b8;
   --text: #161616; --text-muted: #565656; --text-faint: #686868;
-  --accent-light: #0068bd; --accent-dark: #69b8ff;
+  --accent-light: #006da0; --accent-dark: #00a4ef;
   --accent: var(--accent-light);
   --accent-strong: var(--accent);
   --accent-quiet: var(--accent);
@@ -109,28 +166,33 @@ SOFTWARE.
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "Cascadia Mono", "Cascadia Code", ui-monospace, Consolas, "SF Mono", "Liberation Mono", Menlo, monospace;
 }
-[data-theme="dark"], :root:not([data-theme])[data-default-theme="dark"] {
-  color-scheme: dark;
-  --bg: #101010; --surface: #191919; --surface-2: #232323; --surface-3: #2c2c2c;
-  --border: #363636; --border-strong: #595959;
-  --text: #f2f2f2; --text-muted: #b5b5b5; --text-faint: #a0a0a0;
-  --accent: var(--accent-dark);
-  --shadow-1: 0 1px 2px rgba(0,0,0,.3);
-  --shadow-2: 0 2px 4px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.4);
+/* Screen only: every PDF and printout uses the light palette. */
+@media screen {
+  [data-theme="dark"], :root:not([data-theme])[data-default-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101010; --surface: #191919; --surface-2: #232323; --surface-3: #2c2c2c;
+    --border: #363636; --border-strong: #595959;
+    --text: #f2f2f2; --text-muted: #b5b5b5; --text-faint: #a0a0a0;
+    --accent: var(--accent-dark);
+    --shadow-1: 0 1px 2px rgba(0,0,0,.3);
+    --shadow-2: 0 2px 4px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.4);
+  }
 }
+[data-accent="red"], :root:not([data-accent])[data-default-accent="red"],
 [data-accent="orange"], :root:not([data-accent])[data-default-accent="orange"] {
-  --accent-light: #a94000; --accent-dark: #ffae72;
+  --accent-light: #bc3a16; --accent-dark: #f25022;
 }
 [data-accent="green"], :root:not([data-accent])[data-default-accent="green"] {
-  --accent-light: #137344; --accent-dark: #6cd6a0;
+  --accent-light: #4c7100; --accent-dark: #7fba00;
+}
+[data-accent="yellow"], :root:not([data-accent])[data-default-accent="yellow"] {
+  --accent-light: #805b00; --accent-dark: #ffb900;
 }
 </style>
 <link rel="stylesheet" href="../assets/html-docs/article.css">
-<link rel="stylesheet" href="../assets/html-docs/slides.css">
 <link rel="stylesheet" href="../assets/document-navigation.css">
 <link rel="stylesheet" href="../assets/lab-articles.css">
 <script src="../assets/html-docs/article.js" defer></script>
-<script src="../assets/html-docs/slides.js" defer></script>
 <script src="../assets/lab-articles.js" defer></script>
 </head>
 <body>
@@ -138,13 +200,13 @@ SOFTWARE.
 <div class="controls" role="group" aria-label="Article controls">
   <button type="button" class="ctrl" data-action="expand-all">Expand all</button>
   <button type="button" class="ctrl" data-action="collapse-all">Collapse all</button>
-  <button type="button" class="ctrl" data-action="toggle-slides" aria-pressed="false">Slides</button>
+  <button type="button" class="ctrl" data-action="print">PDF</button>
   <button type="button" class="ctrl" data-action="toggle-theme">Dark</button>
   <button type="button" class="ctrl" data-action="toggle-accent">Accent: Blue</button>
 </div>
 <div class="doc">
 <header class="doc-header" id="opening">
-  <div class="slide-content slide-content--title"><h2 class="slide-title">Give style a score.<br><em>Then change the prompt.</em></h2></div>
+
   <p class="eyebrow">Chapter 3 &middot; Hands-on</p>
   <h1>Measure and improve your agent's style</h1>
   <p class="subtitle">Turn your pickup assistant into a relaxed, helpful teammate. Define the rubric, measure its current replies, then change the instructions and compare.</p>
@@ -154,7 +216,7 @@ SOFTWARE.
     <li><strong>Outcome</strong>Two comparable runs and a reusable test set</li>
   </ul>
 </header>
-<nav class="doc-nav" aria-label="Workshop navigation"><a href="../index.html">Workshop index</a><a href="chapter-2-build-agent.html">Chapter 2</a></nav>
+<nav class="doc-nav" aria-label="Workshop navigation"><a href="../index.html">Workshop index</a><a href="chapter-2-build-agent.html">Chapter 2</a><a href="chapter-4-connect-tools.html">Chapter 4</a></nav>
 <nav class="toc" aria-label="Contents"><p class="toc-label">Contents</p><ol>
   <li><a href="#ch-prepare">Prepare the measurement</a></li>
   <li><a href="#ch-compare">Change one thing</a></li>
@@ -164,7 +226,7 @@ SOFTWARE.
 <main id="content">
 <section class="chapter" id="ch-prepare"><h2 class="chapter-label">Prepare the measurement</h2>
 <article class="card card--lead" id="card-preflight" data-open>
-  <div class="slide-content"><h2 class="slide-title">Keep the agent. Add a judge.</h2><p class="slide-lead">No tools, new knowledge or model changes.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="true"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Resume your Chapter 2 agent</span><span class="card-sub">Check the project and evaluation access first.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
     <p>Open <a href="https://ai.azure.com">ai.azure.com</a> with your assigned workshop account. Use the tenant and project from your seat details. Open your <code>pickup-&lt;seat&gt;</code> agent.</p>
@@ -173,7 +235,7 @@ SOFTWARE.
   </div>
 </article>
 <article class="card" id="card-dataset">
-  <div class="slide-content"><h2 class="slide-title">Use the same eight questions.</h2><p class="slide-lead">Synthetic cases, natural customer language.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Upload evaluation data</span><span class="card-sub">Example user questions without answers.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
     <p>Open the file below and select <strong>Download</strong>. Keep the filename <code>pickup-style-v1.jsonl</code>. In Foundry, open <strong>Build &rarr; Data &rarr; Datasets &rarr; Create dataset &rarr; Upload dataset</strong>. Set <strong>Dataset purpose</strong> to <strong>Evaluation</strong>, name it <code>pickup-style-&lt;seat&gt;</code> and select the downloaded file under <strong>Dataset file</strong>. Select <strong>Create</strong>. These are synthetic, attendee-safe cases, but the <code>query</code> values use natural customer language instead of announcing that they are tests.</p>
@@ -193,7 +255,7 @@ SOFTWARE.
   </div>
 </article>
 <article class="card" id="card-evaluator">
-  <div class="slide-content"><h2 class="slide-title">Describe what a good reply sounds like.</h2><p class="slide-lead">A rubric makes taste inspectable.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Create your custom style evaluator</span><span class="card-sub">Score the tone, with a reason you can challenge.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
     <ol class="steps">
@@ -255,7 +317,7 @@ Return only JSON with an integer result from 1 to 5 and a short reason quoting e
 </section>
 <section class="chapter" id="ch-compare"><h2 class="chapter-label">IMPROVE YOUR AGENT</h2>
 <article class="card" id="card-baseline">
-  <div class="slide-content"><h2 class="slide-title">Measure the agent you already have.</h2><p class="slide-lead">A baseline is an observation, not a planned failure.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Run the baseline evaluation</span><span class="card-sub">Have Foundry generate fresh replies from your agent.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
     <ol class="steps">
@@ -272,7 +334,7 @@ Return only JSON with an integer result from 1 to 5 and a short reason quoting e
   </div>
 </article>
 <article class="card" id="card-candidate">
-  <div class="slide-content"><h2 class="slide-title">Change the style, not the facts.</h2><p class="slide-lead">Keep the original capability boundaries.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Check results and improve agent</span><span class="card-sub">Improve agent instructions and re-test.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
     <p>Open the baseline evaluation results and inspect replies scoring below <strong>4</strong>. Read the judge's reasons: look for formal wording, unnecessary detail or a missing useful next step rather than changing the prompt blindly.</p>
@@ -293,7 +355,7 @@ You cannot perform an action even if the customer supplies its rules. Explain on
   </div>
 </article>
 <article class="card" id="card-compare">
-  <div class="slide-content"><h2 class="slide-title">Two runs. One evaluation.</h2><p class="slide-lead">Compare replies, then explore AI analysis.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Compare baseline and candidate</span><span class="card-sub">A warmer answer is only useful if it stays accurate.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
     <ol class="steps">
@@ -327,7 +389,7 @@ You cannot perform an action even if the customer supplies its rules. Explain on
 <section class="chapter" id="ch-grow"><h2 class="chapter-label">Optional extensions: grow the test set</h2>
 <p>These extensions do not change the core completion criteria. Choose at most one when the facilitator confirms access, budget and remaining time. Keep the frozen eight-row comparison intact.</p>
 <article class="card" id="card-generate">
-  <div class="slide-content"><h2 class="slide-title">Generate coverage, not ground truth.</h2><p class="slide-lead">Review every new case before keeping it.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Generate more customer situations</span><span class="card-sub">Keep the original eight-row comparison intact.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
     <p>Start only with facilitator-confirmed generation and preview access, approved consumption and at least fifteen minutes remaining. Open <strong>Data &rarr; Datasets &rarr; Create dataset &rarr; Generate synthetic data</strong>. Choose usage <strong>Evaluation</strong>, task <strong>Simple QnA (single-turn)</strong> and generator <code>gpt-5.2</code>. Provide both a <strong>Reference file</strong> and a <strong>Prompt</strong>: the file anchors the domain and example questions; the prompt steers generation toward customer complaints.</p>
@@ -352,7 +414,7 @@ The assistant has no tools and cannot look up orders, send messages or change re
   </div>
 </article>
 <article class="card" id="card-traces">
-  <div class="slide-content"><h2 class="slide-title">Turn an off-topic request into a test.</h2><p class="slide-lead">Capture the behavior before defining the rule.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Build an unrelated-topics dataset from a trace</span><span class="card-sub">Capture a new kind of input; evaluate it if time allows.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
     <p>Your baseline covered pickup questions; a generated set, if you completed that extension, explores complaints. With at least ten minutes remaining and facilitator-confirmed trace access, simulate a user asking for something outside the business entirely. You do not need the generation extension for this step.</p>
@@ -395,7 +457,7 @@ Judge business scope separately from friendly tone. Do not require an exact refu
   <p><strong>Cleanup:</strong> export your notes and downloaded synthetic data. Give the facilitator your seat plus agent, policy, dataset, evaluator, evaluation-run and optional analysis/generation job IDs. Keep these resources until the facilitator confirms no later exercise needs them. The facilitator owns cloud cleanup; do not delete the project, model deployments, shared evaluators or another seat's resources. Browser downloads and notes are local and are not removed by cloud cleanup.</p>
 </section>
 </main>
-<section class="takeaway" id="closing"><p>You defined a style rubric, compared two agent versions and built a path from conversations to repeatable tests.</p><div class="slide-content slide-content--end"><h2 class="slide-title">Same questions.<br><em>Measurable change.</em></h2></div></section>
+<section class="takeaway" id="closing"><p>You defined a style rubric, compared two agent versions and built a path from conversations to repeatable tests.</p></section>
 <footer class="doc-footer">Microsoft Foundry One-Day Workshop</footer>
 </div>
 </body>

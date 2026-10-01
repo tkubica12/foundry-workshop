@@ -18,8 +18,16 @@ RUNTIME = ROOT / "docs" / "assets" / "html-docs"
 PAGES = sorted(p for p in DOCS.rglob("*.html") if ".standalone." not in p.name)
 EXPORT_PATHS = {
     Path("index.html"),
+    Path("guides/chapter-1-foundry-setup.html"),
     Path("guides/chapter-2-build-agent.html"),
     Path("guides/chapter-3-evaluate-agent.html"),
+    Path("guides/chapter-4-connect-tools.html"),
+    Path("guides/chapter-5-knowledge-base.html"),
+}
+DOWNLOAD_PATHS = {
+    Path("assets/knowledge-base/instruments-pdfs.zip"),
+    Path("assets/knowledge-base/instruments-evaluation.jsonl"),
+    Path("assets/knowledge-base/instruments-evaluation-core.jsonl"),
 }
 
 
@@ -96,8 +104,17 @@ def export_collection(tmp_path_factory):
         target = root / source.relative_to(DOCS)
         target.parent.mkdir(parents=True, exist_ok=True)
         run_node(RUNTIME / "bundle.js", source, target)
-    assert {path.relative_to(root) for path in root.rglob("*") if path.is_file()} == EXPORT_PATHS
+    for relative in DOWNLOAD_PATHS:
+        target = root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(DOCS / relative, target)
+    assert {path.relative_to(root) for path in root.rglob("*") if path.is_file()} == EXPORT_PATHS | DOWNLOAD_PATHS
     return root
+
+
+def test_export_collection_retains_exact_lab_downloads(export_collection):
+    for relative in DOWNLOAD_PATHS:
+        assert (export_collection / relative).read_bytes() == (DOCS / relative).read_bytes()
 
 
 @pytest.mark.parametrize("javascript", [True, False], ids=["interactive", "no-javascript"])

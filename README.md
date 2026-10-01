@@ -3,13 +3,17 @@
 A customer-neutral workshop for professional builders: see an agent in action,
 build and evaluate it, then connect the experience to production architecture.
 All exercises use fictional data. This is a development baseline, not a fully
-qualified delivery package; only Labs 2 and 3 are currently published.
+qualified delivery package; Labs 1 through 5 have published guides.
+Lab 4's portal journey still needs an attendee-identity rehearsal.
 
 ## Start here
 
 - [Workshop labs](docs/index.html)
+- [Lab 1: Create a project and deploy models](docs/guides/chapter-1-foundry-setup.html)
 - [Lab 2: Build an agent](docs/guides/chapter-2-build-agent.html)
 - [Lab 3: Evaluate and improve](docs/guides/chapter-3-evaluate-agent.html)
+- [Lab 4: Connect tools](docs/guides/chapter-4-connect-tools.html)
+- [Lab 5: Ground with knowledge](docs/guides/chapter-5-knowledge-base.html)
 - [Workshop sequence](AGENDA.md)
 - [Synthetic instrument PDF corpus](data/instruments/) · [Grounding eval dataset](evals/grounding/)
 
@@ -17,6 +21,7 @@ qualified delivery package; only Labs 2 and 3 are currently published.
 
 - [Active roadmap](PLAN.md)
 - [Local validation and live qualification limits](teacher/VALIDATION.md)
+- [Lab 4 toolbox preparation and qualification](student/labs/connect-tools/README.md)
 - [Repository instructions](AGENTS.md) · [Architecture decisions](docs/adr/)
 
 ## Preview

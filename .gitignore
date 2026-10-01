@@ -21,5 +21,6 @@ __pycache__/
 .pytest_cache/
 .env
 *.zip
+!docs/assets/knowledge-base/instruments-pdfs.zip
 python/generated/
 evidence/

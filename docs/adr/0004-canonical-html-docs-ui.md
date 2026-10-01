@@ -9,6 +9,10 @@ all seven decks is superseded by [ADR 0005](0005-labs-first-publication.md), aft
 the workshop owner changed the active content priority to a labs-first sequence
 on 2026-09-18. The original rationale below is retained.
 
+Lab presentation views and the older palette are superseded by
+[ADR 0009](0009-reading-only-labs-and-html-docs-1-2.md) after the owner's
+2026-09-30 request for reading-only labs and the updated canonical runtime.
+
 ## Context
 
 The workshop owner requested a rewrite of the UI documentation using the latest

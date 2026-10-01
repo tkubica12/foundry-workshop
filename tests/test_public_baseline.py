@@ -67,7 +67,8 @@ def test_one_day_scope_and_honest_publication_boundary():
     assert "55 minutes" in agenda
     assert "not published" in agenda
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    assert "only Labs 2 and 3 are currently published" in readme
+    assert "Labs 1 through 5 have published guides" in readme
+    assert "portal journey still needs an attendee-identity rehearsal" in readme
     assert "handoffs" not in readme
 
 

@@ -38,7 +38,7 @@ SOFTWARE.
   const id = document.querySelector('meta[name="doc-id"]')?.content ||
     location.pathname.replace(/\.standalone(?=\.html$)/i, "");
   const prefix = "html-docs:" + id + ":";
-  const choices = { theme: ["light", "dark"], accent: ["blue", "orange", "green"] };
+  const choices = { theme: ["light", "dark"], accent: ["blue", "red", "green", "yellow"] };
   const read = (name) => {
     try { return localStorage.getItem(prefix + name); }
     catch { return null; /* Storage may be unavailable for local files. */ }
@@ -62,13 +62,70 @@ SOFTWARE.
   for (const [name, values] of Object.entries(choices)) {
     const fallback = name === "theme" && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : values[0];
     const value = [params.get(name), read(name), root.getAttribute("data-default-" + name), fallback]
+      .map(candidate => name === "accent" && candidate === "orange" ? "red" : candidate)
       .find(candidate => values.includes(candidate));
     root.setAttribute("data-" + name, value);
   }
   root.classList.add("js");
-  if (params.get("view") === "slides") root.setAttribute("data-view", "slides");
-  window.HtmlDocs = { read, write, refresh };
+  if (["slides", "sheet"].includes(params.get("view"))) root.setAttribute("data-view", params.get("view"));
+
+  // Print what is on screen. data-print selects the matching print stylesheet.
+  const printTarget = () => {
+    if (document.querySelector(".deck-stage")) return "slides";
+    const view = root.getAttribute("data-view");
+    if (view === "slides" || (view === "sheet" && document.querySelector(".sheet"))) return view;
+    return document.querySelector(".doc") || !document.querySelector(".sheet") ? "read" : "sheet";
+  };
+  let printing = null;
+  addEventListener("beforeprint", () => {
+    if (root.hasAttribute("data-print")) return; // Set by an automated export.
+    const target = printTarget();
+    printing = document.title;
+    root.setAttribute("data-print", target);
+    // The browser proposes the title as the PDF file name.
+    if (target !== "read" && document.querySelector(".doc")) {
+      document.title += target === "slides" ? " - Slides" : " - Sheet";
+    }
+  });
+  addEventListener("afterprint", () => {
+    if (printing === null) return;
+    root.removeAttribute("data-print");
+    document.title = printing;
+    printing = null;
+  });
+
+  // Keep the display awake while presenting, like presentation software does.
+  let lock = null;
+  let awake = false;
+  async function holdScreen() {
+    if (!awake || lock || document.visibilityState !== "visible" || !navigator.wakeLock) return;
+    try {
+      const sentinel = await navigator.wakeLock.request("screen");
+      if (!awake || lock) { sentinel.release(); return; }
+      lock = sentinel;
+      root.setAttribute("data-awake", "");
+      sentinel.addEventListener("release", () => {
+        if (lock !== sentinel) return;
+        lock = null;
+        root.removeAttribute("data-awake");
+      });
+    } catch { /* Denied by battery saver or an embedding policy; retried on input. */ }
+  }
+  function keepAwake(on) {
+    awake = !!on;
+    if (awake) holdScreen();
+    else if (lock) lock.release();
+  }
+  // The browser drops the lock when the tab is hidden; some require a gesture.
+  document.addEventListener("visibilitychange", holdScreen);
+  document.addEventListener("pointerdown", holdScreen);
+  document.addEventListener("keydown", holdScreen);
+
+  window.HtmlDocs = { read, write, refresh, keepAwake };
   document.addEventListener("DOMContentLoaded", refresh);
+  document.addEventListener("click", event => {
+    if (event.target.closest('[data-action="print"]')) window.print();
+  });
   document.addEventListener("click", event => {
     const button = event.target.closest('[data-action="toggle-theme"], [data-action="toggle-accent"]');
     if (!button) return;
@@ -94,7 +151,7 @@ SOFTWARE.
   --bg: #fafafa; --surface: #ffffff; --surface-2: #f2f2f2; --surface-3: #e8e8e8;
   --border: #dedede; --border-strong: #b8b8b8;
   --text: #161616; --text-muted: #565656; --text-faint: #686868;
-  --accent-light: #0068bd; --accent-dark: #69b8ff;
+  --accent-light: #006da0; --accent-dark: #00a4ef;
   --accent: var(--accent-light);
   --accent-strong: var(--accent);
   --accent-quiet: var(--accent);
@@ -109,28 +166,33 @@ SOFTWARE.
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "Cascadia Mono", "Cascadia Code", ui-monospace, Consolas, "SF Mono", "Liberation Mono", Menlo, monospace;
 }
-[data-theme="dark"], :root:not([data-theme])[data-default-theme="dark"] {
-  color-scheme: dark;
-  --bg: #101010; --surface: #191919; --surface-2: #232323; --surface-3: #2c2c2c;
-  --border: #363636; --border-strong: #595959;
-  --text: #f2f2f2; --text-muted: #b5b5b5; --text-faint: #a0a0a0;
-  --accent: var(--accent-dark);
-  --shadow-1: 0 1px 2px rgba(0,0,0,.3);
-  --shadow-2: 0 2px 4px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.4);
+/* Screen only: every PDF and printout uses the light palette. */
+@media screen {
+  [data-theme="dark"], :root:not([data-theme])[data-default-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101010; --surface: #191919; --surface-2: #232323; --surface-3: #2c2c2c;
+    --border: #363636; --border-strong: #595959;
+    --text: #f2f2f2; --text-muted: #b5b5b5; --text-faint: #a0a0a0;
+    --accent: var(--accent-dark);
+    --shadow-1: 0 1px 2px rgba(0,0,0,.3);
+    --shadow-2: 0 2px 4px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.4);
+  }
 }
+[data-accent="red"], :root:not([data-accent])[data-default-accent="red"],
 [data-accent="orange"], :root:not([data-accent])[data-default-accent="orange"] {
-  --accent-light: #a94000; --accent-dark: #ffae72;
+  --accent-light: #bc3a16; --accent-dark: #f25022;
 }
 [data-accent="green"], :root:not([data-accent])[data-default-accent="green"] {
-  --accent-light: #137344; --accent-dark: #6cd6a0;
+  --accent-light: #4c7100; --accent-dark: #7fba00;
+}
+[data-accent="yellow"], :root:not([data-accent])[data-default-accent="yellow"] {
+  --accent-light: #805b00; --accent-dark: #ffb900;
 }
 </style>
 <link rel="stylesheet" href="../assets/html-docs/article.css">
-<link rel="stylesheet" href="../assets/html-docs/slides.css">
 <link rel="stylesheet" href="../assets/document-navigation.css">
 <link rel="stylesheet" href="../assets/lab-articles.css">
 <script src="../assets/html-docs/article.js" defer></script>
-<script src="../assets/html-docs/slides.js" defer></script>
 <script src="../assets/lab-articles.js" defer></script>
 </head>
 <body>
@@ -138,13 +200,13 @@ SOFTWARE.
 <div class="controls" role="group" aria-label="Article controls">
   <button type="button" class="ctrl" data-action="expand-all">Expand all</button>
   <button type="button" class="ctrl" data-action="collapse-all">Collapse all</button>
-  <button type="button" class="ctrl" data-action="toggle-slides" aria-pressed="false">Slides</button>
+  <button type="button" class="ctrl" data-action="print">PDF</button>
   <button type="button" class="ctrl" data-action="toggle-theme">Dark</button>
   <button type="button" class="ctrl" data-action="toggle-accent">Accent: Blue</button>
 </div>
 <div class="doc">
 <header class="doc-header" id="opening">
-  <div class="slide-content slide-content--title"><h2 class="slide-title">Help the customer.<br><em>Control the data.</em></h2><p class="slide-lead">Build now. Measure the personality later.</p></div>
+
   <p class="eyebrow">Chapter 2 &middot; Hands-on</p>
   <h1>Build an agent and prove its guardrail</h1>
   <p class="subtitle">Create a pickup assistant, compare two models, then block and annotate a synthetic email. Keep the agent for later improvement.</p>
@@ -154,7 +216,7 @@ SOFTWARE.
     <li><strong>Outcome</strong>A customer conversation and an attributed PII control</li>
   </ul>
 </header>
-<nav class="doc-nav" aria-label="Workshop navigation"><a href="../index.html">Workshop index</a></nav>
+<nav class="doc-nav" aria-label="Workshop navigation"><a href="../index.html">Workshop index</a><a href="chapter-1-foundry-setup.html">Lab 1</a></nav>
 <nav class="toc" aria-label="Contents"><p class="toc-label">Contents</p><ol>
   <li><a href="#ch-before-you-start">Prepared seat</a></li>
   <li><a href="#ch-create-agent">Customer conversation</a></li>
@@ -165,18 +227,19 @@ SOFTWARE.
 <main id="content">
 <section class="chapter" id="ch-before-you-start"><h2 class="chapter-label">Prepared seat</h2>
 <article class="card card--lead" id="card-before-you-start-1" data-open>
-  <div class="slide-content"><h2 class="slide-title">Start in the prepared project.</h2><p class="slide-lead">Synthetic data only. No installation.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="true"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Verify access before starting</span><span class="card-sub">Your account, your project, your agent.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body" id="before-you-start">
     <p id="before-you-start-heading">Open <a href="https://ai.azure.com">ai.azure.com</a> with your assigned workshop account. Select the tenant and project from your seat details; check the project name before creating anything.</p>
     <p id="prepared-seat-readiness">Confirm with your facilitator that your seat can create agents and personal-information guardrails, select the models below, and read traces. If sign-in or a required control is unavailable, stop and contact your facilitator; do not switch to a personal account or deploy replacements.</p>
     <p>Models: admin-connected <code>gpt-5.6-luna</code> and <code>Mistral-Large-3</code>; project-local <code>gpt-5.2</code>. Personal information (PII) includes email addresses. Use only the fictional address supplied here.</p>
+    <p>If you completed <a href="chapter-1-foundry-setup.html#card-test-models">Lab 1</a>, keep its project and deployments. Confirm the project assigned for this lab and the additional models above with your facilitator; do not substitute Lab 1's deployments for this exercise's models.</p>
   </div>
 </article>
 </section>
 <section class="chapter" id="ch-create-agent"><h2 class="chapter-label">Customer conversation</h2>
 <article class="card" id="card-create-agent-1">
-  <div class="slide-content"><h2 class="slide-title">Give the assistant a job.</h2><p class="slide-lead">Leave its tone unconfigured.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Create your pickup assistant</span><span class="card-sub">Task and boundaries, not a personality prompt.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body" id="create-agent">
     <ol class="steps">
@@ -192,7 +255,7 @@ You cannot look up orders, send messages, or change reservations.</code></pre><d
   </div>
 </article>
 <article class="card" id="card-create-agent-2">
-  <div class="slide-content"><h2 class="slide-title">Meet the assistant as a customer.</h2><p class="slide-lead">The message supplies every order fact.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Send the first customer message</span><span class="card-sub">Notice its greeting, tone and next step.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
     <p>Start <strong>New chat</strong>. Send:</p>
@@ -206,7 +269,7 @@ Can you help me work out what to do?</code></pre><div class="lab-copy-row"><butt
 </section>
 <section class="chapter" id="ch-model-choice"><h2 class="chapter-label">Model comparison</h2>
 <article class="card" id="card-model-choice-1">
-  <div class="slide-content"><h2 class="slide-title">Change the model, not the task.</h2><p class="slide-lead">Two answers give a first impression.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Compare the same message with Mistral</span><span class="card-sub">A fresh chat prevents reuse of the first answer.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body" id="model-choice">
     <p id="model-choice-heading">Keep the first answer and its model/version in your notes. Select <code>Mistral-Large-3</code>, save, start <strong>New chat</strong>, and send the identical <a href="#customer-prompt">customer message</a>.</p>
@@ -217,7 +280,7 @@ Can you help me work out what to do?</code></pre><div class="lab-copy-row"><butt
 </section>
 <section class="chapter" id="ch-guardrail"><h2 class="chapter-label">Block, then annotate</h2>
 <article class="card" id="card-guardrail-1">
-  <div class="slide-content"><h2 class="slide-title">Establish an unblocked baseline.</h2><p class="slide-lead">Change only the email between cases.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Try an email before adding a PII control</span><span class="card-sub">Use the local model for the rehearsed guardrail path.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body" id="guardrail">
     <p id="guardrail-heading">Switch to <code>gpt-5.2</code> under <strong>Deployments</strong> and save. Keep the default guardrail; do not disable existing controls. Send each message in a separate <strong>New chat</strong>.</p>
@@ -228,7 +291,7 @@ My contact email is alex.customer@example.com.</code></pre><div class="lab-copy-
   </div>
 </article>
 <article class="card" id="card-guardrail-2">
-  <div class="slide-content"><h2 class="slide-title">Block personal information at input.</h2><p class="slide-lead">Scope the policy to your agent only.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Create an email-blocking guardrail</span><span class="card-sub">Keep all existing default controls.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
     <ol class="steps">
@@ -241,7 +304,7 @@ My contact email is alex.customer@example.com.</code></pre><div class="lab-copy-
   </div>
 </article>
 <article class="card" id="card-guardrail-3">
-  <div class="slide-content"><h2 class="slide-title">A block needs a passing control.</h2><p class="slide-lead">Policy attribution matters more than refusal wording.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Repeat both messages and identify the block</span><span class="card-sub">Fresh chats keep the email out of the control case.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
     <p>On <code>gpt-5.2</code>, resend the <a href="#control-prompt">control</a> and <a href="#pii-prompt">email message</a>, each in a separate <strong>New chat</strong>.</p>
@@ -249,7 +312,7 @@ My contact email is alex.customer@example.com.</code></pre><div class="lab-copy-
   </div>
 </article>
 <article class="card" id="card-guardrail-4">
-  <div class="slide-content"><h2 class="slide-title">Annotate detects without blocking.</h2><p class="slide-lead">It does not sanitize the model input.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Change only the email action to Annotate</span><span class="card-sub">Keep the model, instructions and message unchanged.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
     <p>Open your policy under <strong>Build &rarr; Guardrails &rarr; Edit</strong>. Change the <strong>Email protection / User input</strong> action from <strong>Block</strong> to <strong>Annotate</strong>. Keep other controls and the single-agent assignment unchanged, then finish the wizard.</p>
@@ -261,7 +324,7 @@ My contact email is alex.customer@example.com.</code></pre><div class="lab-copy-
 </section>
 <section class="chapter" id="ch-decision"><h2 class="chapter-label">Evidence and next chapter</h2>
 <article class="card" id="card-decision-1">
-  <div class="slide-content"><h2 class="slide-title">Find the detection in the trace.</h2><p class="slide-lead">Same email. Different enforcement.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Inspect the exact annotated invocation</span><span class="card-sub">Look at the agent span, not only the chat reply.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body" id="decision">
     <p id="decision-heading">Select <strong>Traces</strong> beneath the annotated reply. In <strong>Trajectories</strong>, select its <code>invoke_agent</code> span and open <strong>Metadata</strong>. Match the response ID and locate <code>microsoft.foundry.<wbr>content_filter.<wbr>results</code>.</p>
@@ -270,7 +333,7 @@ My contact email is alex.customer@example.com.</code></pre><div class="lab-copy-
   </div>
 </article>
 <article class="card" id="card-decision-2">
-  <div class="slide-content"><h2 class="slide-title">Keep the baseline for improvement.</h2><p class="slide-lead">Later, change the prompt and measure again.</p></div>
+
   <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Keep this agent for the next chapters</span><span class="card-sub">Do not tune the personality or delete the agent yet.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
   <div class="card-body">
     <p>Record your agent name/version, original instructions, model, policy name/action and one trace ID in your local notes. Keep the agent on <code>gpt-5.2</code> with your lab-only Annotate policy.</p>
@@ -286,7 +349,7 @@ My contact email is alex.customer@example.com.</code></pre><div class="lab-copy-
   <p><strong>Cleanup:</strong> keep your agent and its lab-only policy for Lab 3. After your final lab, export your notes and give the facilitator your seat, agent and policy names. The facilitator owns removal of workshop resources; do not delete a project, model deployment or shared policy. Keep using synthetic data while Annotate is enabled; do not leave that lab setting attached to a production agent.</p>
 </section>
 </main>
-<section class="takeaway" id="closing"><p>You created an agent, tried different models, enabled guardrails, and inspected traces.</p><div class="slide-content slide-content--end"><h2 class="slide-title">Build the baseline.<br><em>Then earn the improvement.</em></h2></div></section>
+<section class="takeaway" id="closing"><p>You created an agent, tried different models, enabled guardrails, and inspected traces.</p></section>
 <footer class="doc-footer">Microsoft Foundry One-Day Workshop</footer>
 </div>
 </body>

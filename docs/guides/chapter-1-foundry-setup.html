@@ -1,0 +1,357 @@
+<!doctype html>
+<!--
+MIT License
+
+Copyright (c) 2026 Tomáš Kubica
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<html lang="en" data-default-accent="blue" data-page="lab-guide">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab 1: Create your Foundry project and deploy models</title>
+<meta name="description" content="Sign in to Microsoft Foundry, create a project in your assigned resource group in Sweden Central, deploy three models with bounded TPM, and test them in the playground.">
+<meta name="doc-id" content="chapter-1-foundry-setup">
+<script data-doc-bootstrap>
+/* Inline in the head before styles with sync-head.js. No deferred bootstrap. */
+(() => {
+  "use strict";
+  const root = document.documentElement;
+  const params = new URLSearchParams(location.search);
+  const id = document.querySelector('meta[name="doc-id"]')?.content ||
+    location.pathname.replace(/\.standalone(?=\.html$)/i, "");
+  const prefix = "html-docs:" + id + ":";
+  const choices = { theme: ["light", "dark"], accent: ["blue", "red", "green", "yellow"] };
+  const read = (name) => {
+    try { return localStorage.getItem(prefix + name); }
+    catch { return null; /* Storage may be unavailable for local files. */ }
+  };
+  const write = (name, value) => {
+    try { localStorage.setItem(prefix + name, value); }
+    catch { /* The current view still works without persistence. */ }
+  };
+  function refresh() {
+    for (const name of Object.keys(choices)) {
+      const current = root.getAttribute("data-" + name);
+      const next = choices[name][(choices[name].indexOf(current) + 1) % choices[name].length];
+      document.querySelectorAll('[data-action="toggle-' + name + '"]').forEach(button => {
+        button.textContent = name === "theme" ? (next === "dark" ? "Dark" : "Light") :
+          "Accent: " + current[0].toUpperCase() + current.slice(1);
+        button.setAttribute("aria-label", name === "theme" ? "Switch to " + next + " theme" :
+          "Accent: " + current + ". Switch to " + next);
+      });
+    }
+  }
+  for (const [name, values] of Object.entries(choices)) {
+    const fallback = name === "theme" && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : values[0];
+    const value = [params.get(name), read(name), root.getAttribute("data-default-" + name), fallback]
+      .map(candidate => name === "accent" && candidate === "orange" ? "red" : candidate)
+      .find(candidate => values.includes(candidate));
+    root.setAttribute("data-" + name, value);
+  }
+  root.classList.add("js");
+  if (["slides", "sheet"].includes(params.get("view"))) root.setAttribute("data-view", params.get("view"));
+
+  // Print what is on screen. data-print selects the matching print stylesheet.
+  const printTarget = () => {
+    if (document.querySelector(".deck-stage")) return "slides";
+    const view = root.getAttribute("data-view");
+    if (view === "slides" || (view === "sheet" && document.querySelector(".sheet"))) return view;
+    return document.querySelector(".doc") || !document.querySelector(".sheet") ? "read" : "sheet";
+  };
+  let printing = null;
+  addEventListener("beforeprint", () => {
+    if (root.hasAttribute("data-print")) return; // Set by an automated export.
+    const target = printTarget();
+    printing = document.title;
+    root.setAttribute("data-print", target);
+    // The browser proposes the title as the PDF file name.
+    if (target !== "read" && document.querySelector(".doc")) {
+      document.title += target === "slides" ? " - Slides" : " - Sheet";
+    }
+  });
+  addEventListener("afterprint", () => {
+    if (printing === null) return;
+    root.removeAttribute("data-print");
+    document.title = printing;
+    printing = null;
+  });
+
+  // Keep the display awake while presenting, like presentation software does.
+  let lock = null;
+  let awake = false;
+  async function holdScreen() {
+    if (!awake || lock || document.visibilityState !== "visible" || !navigator.wakeLock) return;
+    try {
+      const sentinel = await navigator.wakeLock.request("screen");
+      if (!awake || lock) { sentinel.release(); return; }
+      lock = sentinel;
+      root.setAttribute("data-awake", "");
+      sentinel.addEventListener("release", () => {
+        if (lock !== sentinel) return;
+        lock = null;
+        root.removeAttribute("data-awake");
+      });
+    } catch { /* Denied by battery saver or an embedding policy; retried on input. */ }
+  }
+  function keepAwake(on) {
+    awake = !!on;
+    if (awake) holdScreen();
+    else if (lock) lock.release();
+  }
+  // The browser drops the lock when the tab is hidden; some require a gesture.
+  document.addEventListener("visibilitychange", holdScreen);
+  document.addEventListener("pointerdown", holdScreen);
+  document.addEventListener("keydown", holdScreen);
+
+  window.HtmlDocs = { read, write, refresh, keepAwake };
+  document.addEventListener("DOMContentLoaded", refresh);
+  document.addEventListener("click", event => {
+    if (event.target.closest('[data-action="print"]')) window.print();
+  });
+  document.addEventListener("click", event => {
+    const button = event.target.closest('[data-action="toggle-theme"], [data-action="toggle-accent"]');
+    if (!button) return;
+    const name = button.getAttribute("data-action").slice(7);
+    const values = choices[name];
+    const next = values[(values.indexOf(root.getAttribute("data-" + name)) + 1) % values.length];
+    root.setAttribute("data-" + name, next);
+    write(name, next);
+    // Replace a URL override too, so reloading preserves a deliberate change.
+    const url = new URL(location.href);
+    if (url.searchParams.has(name)) {
+      url.searchParams.set(name, next);
+      history.replaceState(null, "", url.href);
+    }
+    refresh();
+  });
+})();
+</script>
+<style data-doc-tokens>
+/* Canonical tokens. Inline with sync-head.js; one accent family at a time. */
+:root {
+  color-scheme: light;
+  --bg: #fafafa; --surface: #ffffff; --surface-2: #f2f2f2; --surface-3: #e8e8e8;
+  --border: #dedede; --border-strong: #b8b8b8;
+  --text: #161616; --text-muted: #565656; --text-faint: #686868;
+  --accent-light: #006da0; --accent-dark: #00a4ef;
+  --accent: var(--accent-light);
+  --accent-strong: var(--accent);
+  --accent-quiet: var(--accent);
+  --accent-soft: color-mix(in srgb, var(--accent) 9%, var(--bg));
+  --accent-border: color-mix(in srgb, var(--accent) 36%, var(--bg));
+  --warn: var(--accent); --warn-soft: var(--accent-soft); --warn-border: var(--accent-border);
+  --code-bg: var(--surface-2); --code-border: var(--border);
+  --focus: var(--accent);
+  --shadow-1: 0 1px 2px rgba(0,0,0,.04);
+  --shadow-2: 0 2px 4px rgba(0,0,0,.04), 0 12px 28px rgba(0,0,0,.06);
+  --radius: 10px; --radius-sm: 6px; --canvas: 1160px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Cascadia Mono", "Cascadia Code", ui-monospace, Consolas, "SF Mono", "Liberation Mono", Menlo, monospace;
+}
+/* Screen only: every PDF and printout uses the light palette. */
+@media screen {
+  [data-theme="dark"], :root:not([data-theme])[data-default-theme="dark"] {
+    color-scheme: dark;
+    --bg: #101010; --surface: #191919; --surface-2: #232323; --surface-3: #2c2c2c;
+    --border: #363636; --border-strong: #595959;
+    --text: #f2f2f2; --text-muted: #b5b5b5; --text-faint: #a0a0a0;
+    --accent: var(--accent-dark);
+    --shadow-1: 0 1px 2px rgba(0,0,0,.3);
+    --shadow-2: 0 2px 4px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.4);
+  }
+}
+[data-accent="red"], :root:not([data-accent])[data-default-accent="red"],
+[data-accent="orange"], :root:not([data-accent])[data-default-accent="orange"] {
+  --accent-light: #bc3a16; --accent-dark: #f25022;
+}
+[data-accent="green"], :root:not([data-accent])[data-default-accent="green"] {
+  --accent-light: #4c7100; --accent-dark: #7fba00;
+}
+[data-accent="yellow"], :root:not([data-accent])[data-default-accent="yellow"] {
+  --accent-light: #805b00; --accent-dark: #ffb900;
+}
+</style>
+<link rel="stylesheet" href="../assets/html-docs/article.css">
+<link rel="stylesheet" href="../assets/document-navigation.css">
+<link rel="stylesheet" href="../assets/lab-articles.css">
+<script src="../assets/html-docs/article.js" defer></script>
+<script src="../assets/lab-articles.js" defer></script>
+<style>
+  .deployment-table { min-width: 640px; }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#content">Skip to the lab steps</a>
+<div class="controls" role="group" aria-label="Article controls">
+  <button type="button" class="ctrl" data-action="expand-all">Expand all</button>
+  <button type="button" class="ctrl" data-action="collapse-all">Collapse all</button>
+  <button type="button" class="ctrl" data-action="print">PDF</button>
+  <button type="button" class="ctrl" data-action="toggle-theme">Dark</button>
+  <button type="button" class="ctrl" data-action="toggle-accent">Accent: Blue</button>
+</div>
+<div class="doc">
+<header class="doc-header" id="opening">
+  <p class="eyebrow">Chapter 1 &middot; Hands-on</p>
+  <h1>Create your Foundry project and deploy models</h1>
+  <p class="subtitle">Start in your own resource group. Deploy a primary model and two alternatives, then get your first playground replies.</p>
+  <ul class="lab-meta">
+    <li><strong>Time</strong>20 minutes for the core; finish pending GLM checks later</li>
+    <li><strong>Environment</strong>Assigned workshop account and resource group; browser only</li>
+    <li><strong>Outcome</strong>A project, primary/Luna replies, and GLM deployed or submitted</li>
+  </ul>
+</header>
+<p><strong>Core path:</strong> create your project, deploy and test the primary model and Luna, then submit the GLM Flash deployment. If GLM is ready, test it now. If it is pending, record its status and return for the deferred success and hello checks; do not wait past the core timebox. The complete lab outcome is three successful deployments with a reply from each.</p>
+<nav class="doc-nav" aria-label="Workshop navigation"><a href="../index.html">Workshop index</a><a href="chapter-2-build-agent.html">Lab 2</a></nav>
+<nav class="toc" aria-label="Contents"><p class="toc-label">Contents</p><ol>
+  <li><a href="#ch-access">Account and access</a></li>
+  <li><a href="#ch-project">Your project</a></li>
+  <li><a href="#ch-models">Model deployments</a></li>
+  <li><a href="#ch-playground">First replies</a></li>
+  <li><a href="#ch-recovery">Troubleshooting</a></li>
+  <li><a href="#resume-cleanup">Resume and cleanup</a></li>
+</ol></nav>
+<main id="content" tabindex="-1">
+<section class="chapter" id="ch-access"><h2 class="chapter-label">Account and access</h2>
+<article class="card card--lead" id="card-sign-in" data-open>
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="true"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Sign in with your workshop identity</span><span class="card-sub">Check your tenant, subscription, resource group and seat number.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body">
+    <p>Have your assigned account, tenant, shared subscription, existing resource group and seat number ready. Get these details from your facilitator; do not use a personal subscription or invent a resource group.</p>
+    <ol class="steps">
+      <li><p>Open <a href="https://ai.azure.com">ai.azure.com</a>. Sign in with the assigned Microsoft Entra account and complete MFA if prompted. Use the <strong>New Foundry</strong> experience if the portal offers that toggle.</p></li>
+      <li><p>Check the signed-in account and directory against your seat details. If you need to verify Azure access, open <a href="https://portal.azure.com">portal.azure.com</a> with the same identity. In <strong>Subscriptions</strong>, check the assigned subscription; in <strong>Resource groups</strong>, find your assigned group. Azure portal sign-in is a reference check, not a separate deployment step.</p></li>
+      <li><p>Confirm with your facilitator that this account can create a Foundry resource and project in your group, deploy models, and run playground inference. The facilitator must have enabled <strong>Fireworks.EnableDeploy</strong> for the subscription and approved any required provider terms before the lab. Do not register subscription-wide features or change role assignments yourself.</p></li>
+    </ol>
+    <p>No CLI, SDK, API key or local installation is needed. Use synthetic prompts only.</p>
+    <div class="checkpoint"><span class="checkpoint__label">Check</span><p>You are signed in to Foundry with the expected identity, and you know exactly which subscription and resource group to select. Stop here if access is missing.</p></div>
+  </div>
+</article>
+</section>
+<section class="chapter" id="ch-project"><h2 class="chapter-label">Your project</h2>
+<article class="card" id="card-create-project">
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Create one project in Sweden Central</span><span class="card-sub">Use your existing resource group, not the suggested new one.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body">
+    <ol class="steps">
+      <li><p>Open the project selector in the upper-left corner and select <strong>Create new project</strong>. On a first visit, use the home page's project creation action.</p></li>
+      <li><p>Enter <code>workshop-&lt;seat-number&gt;</code> as the project name. For example, seat <code>007</code> uses <code>workshop-007</code>. Replace the example number with your own; never type the angle brackets.</p></li>
+      <li><p>Open <strong>Advanced options</strong>. Select your assigned <strong>Subscription</strong>, choose your existing <strong>Resource group</strong>, and set <strong>Location</strong> to <strong>Sweden Central</strong> (<code>swedencentral</code>). The portal also creates a parent Foundry resource. If it asks for that resource's name, use <code>foundry-workshop-&lt;seat-number&gt;-&lt;unique-suffix&gt;</code>, for example <code>foundry-workshop-007-a1b2</code>; keep the generated name if it is valid and belongs to your group.</p></li>
+      <li><p>Review the fields, then select <strong>Create</strong> or <strong>Create project</strong>, as shown in the dialog. Wait for creation to finish and check the project name in the selector. If creation is still pending after five minutes, ask the facilitator instead of submitting it again.</p></li>
+    </ol>
+    <p><strong>Why:</strong> the resource group scopes your Azure resources; the Foundry resource hosts deployments; the project organizes your work. A deployment is an instance of a model, not a new project.</p>
+    <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Your project opens. Its parent resource is in your assigned subscription and resource group, with location Sweden Central. Record the project and parent-resource names for resume and cleanup.</p></div>
+  </div>
+</article>
+</section>
+<section class="chapter" id="ch-models"><h2 class="chapter-label">Model deployments</h2>
+<article class="card" id="card-primary-model">
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Deploy one primary model with custom capacity</span><span class="card-sub">Try the fallback order only when quota or model availability blocks deployment.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body">
+    <p>Use <strong>Global Standard</strong> and <strong>100,000 tokens per minute</strong> for exactly one primary deployment. Try <code>gpt-6.1-sol</code> first; if there is insufficient quota or it is unavailable, try <code>gpt-6-sol</code>, then <code>gpt-5.6-sol</code>. Do not deploy all three.</p>
+    <ol class="steps">
+      <li><p>In your project, open <strong>Build &rarr; Models</strong>. This lists deployments in the parent resource. To browse models, use the model-catalog action on this page if offered; otherwise select <strong>Discover &rarr; Models</strong>.</p></li>
+      <li><p>Search for <code>gpt-6.1-sol</code> and open its model card. Select <strong>Deploy &rarr; Custom settings</strong>, not <strong>Default settings</strong>. Check the target resource and project before continuing.</p></li>
+      <li><p>Use deployment name <code>primary-&lt;seat-number&gt;</code>. Set <strong>Deployment type</strong> to <strong>Global Standard</strong>. Set <strong>Tokens per Minute Rate Limit</strong> to <code>100000</code>. If the control uses thousands of TPM, enter <code>100</code> and verify that the summary means <strong>100,000 TPM</strong>. Keep the default guardrail and other settings unchanged.</p></li>
+      <li><p>Select <strong>Deploy</strong>. Return to <strong>Build &rarr; Models</strong> and verify <strong>Succeeded</strong>. If the dialog reports insufficient quota, close it and repeat the custom deployment with the next primary model, keeping the same type and TPM. Before retrying after a submitted deployment, inspect its status: do not create a duplicate while it is pending or reuse its name while a failed deployment still exists.</p></li>
+    </ol>
+    <p><strong>Why custom settings:</strong> assigned TPM consumes the subscription's available quota. A small allocation leaves room for other seats. TPM is a rate limit, not a spending cap or a guarantee of throughput. <strong>Global Standard</strong> can process prompts outside Sweden; the project's region does not impose regional inference residency.</p>
+    <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Exactly one primary model is deployed successfully, with Global Standard and 100,000 TPM. Record its actual model ID, deployment name and version. If none of the three fits, stop and ask the facilitator; do not increase capacity, change region or edit another seat's deployment.</p></div>
+  </div>
+</article>
+<article class="card" id="card-other-models">
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Add two models at 50,000 TPM each</span><span class="card-sub">Repeat the custom deployment; do not accept a larger default allocation.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body">
+    <p>Repeat <strong>Deploy &rarr; Custom settings</strong> for each model below, targeting your own Foundry resource:</p>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Additional model deployments; scroll horizontally on a narrow screen"><table class="deployment-table">
+      <caption>Additional model deployments</caption>
+      <thead><tr><th scope="col">Model ID</th><th scope="col">Deployment name</th><th scope="col">Type</th><th scope="col">TPM</th></tr></thead>
+      <tbody>
+        <tr><td><code>gpt-6-luna</code></td><td><code>luna-&lt;seat-number&gt;</code></td><td>Global Standard</td><td>50,000</td></tr>
+        <tr><td><code>FW-GLM-5.3-Flash</code></td><td><code>glm-flash-&lt;seat-number&gt;</code></td><td>Global Standard</td><td>50,000</td></tr>
+      </tbody>
+    </table></div>
+    <ol class="steps">
+      <li><p>Deploy <code>gpt-6-luna</code> with rate limit <code>50000</code> (or <code>50</code> in a control explicitly labeled in thousands). Verify the final summary shows 50,000 TPM.</p></li>
+      <li><p>Open the exact <code>FW-GLM-5.3-Flash</code> model card. If it uses a <strong>Token Plan</strong> field, choose <strong>Pay-per-token &rarr; Global Standard</strong>, not <strong>Provisioned Throughput</strong>. Set 50,000 TPM and keep the default guardrail. If provider or Marketplace terms appear, proceed only if your facilitator has authorized acceptance; otherwise ask them to complete that step.</p></li>
+      <li><p>Check both deployments in <strong>Build &rarr; Models</strong>. Fireworks deployment can take up to 30 minutes: if it remains pending at the end of this lab's timebox, record the status, notify the facilitator and return later for its playground check. A pending deployment is not a completed checkpoint.</p></li>
+    </ol>
+    <div class="checkpoint"><span class="checkpoint__label">Core check</span><p>Your primary is successful at 100,000 TPM, Luna is successful at 50,000 TPM, and GLM Flash has been submitted at 50,000 TPM with its status recorded. If GLM is pending, defer its success check rather than counting it as complete. These are separate allocations, not one interchangeable quota pool. If either additional model or its required settings are unavailable, ask the facilitator; no substitute is specified for these two models.</p></div>
+  </div>
+</article>
+</section>
+<section class="chapter" id="ch-playground"><h2 class="chapter-label">First replies</h2>
+<article class="card" id="card-test-models">
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Say hello to each deployment</span><span class="card-sub">A reply verifies the inference path, not model quality.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body">
+    <ol class="steps">
+      <li><p>In <strong>Build &rarr; Models</strong>, select your primary deployment to open its <strong>Playground</strong>. Check the selected deployment name before sending a message.</p></li>
+      <li><p>Start <strong>New chat</strong> if a previous conversation is open. Copy and send the prompt below. Wait for a nonempty reply; its exact wording will vary.</p></li>
+      <li><p>Repeat in a fresh chat for your <code>luna-&lt;seat-number&gt;</code> deployment. Then test <code>glm-flash-&lt;seat-number&gt;</code> only if its status is <strong>Succeeded</strong>. If GLM is pending, mark its hello check <strong>Not yet tested</strong>, continue to the next lab after facilitator confirmation, and return to this step once deployment succeeds. Confirm the deployment selector each time. Leave tools and files unused.</p></li>
+    </ol>
+    <div class="code" id="hello-prompt"><p class="code-label">Playground prompt</p><pre><code>Ahoj! Odpovez jednou kratkou vetou a predstav se jako pomocnik pro tento workshop.</code></pre><div class="lab-copy-row"><button type="button" class="lab-button" data-lab-copy aria-label="Copy Playground prompt">Copy</button><span class="lab-copy-status" role="status" aria-live="polite"></span></div></div>
+    <div class="checkpoint"><span class="checkpoint__label">Core check</span><p>The primary model and Luna each return a nonempty answer without an error. Record GLM's reply if ready, or its pending status and deferred hello check.</p></div>
+    <p><strong>Final check, after pending work:</strong> each of your three deployments has status Succeeded and returns a nonempty answer without an error. Note any pending or failed checks separately; do not count a deployment status alone as a successful conversation.</p>
+    <p><strong>Connect it:</strong> identify the subscription and resource group, the parent Foundry resource, the project, the model ID and the deployment name. The playground sends inference requests to the selected deployment. Later, applications use that deployment name to select the same instance.</p>
+    <p><strong>Next:</strong> keep this project and its models. Before opening <a href="chapter-2-build-agent.html#card-before-you-start-1">Lab 2</a>, have the facilitator confirm its separately required admin-connected <code>gpt-5.6-luna</code> and <code>Mistral-Large-3</code>, local <code>gpt-5.2</code>, guardrails and trace access in the project assigned for Lab 2. Lab 1's three deployments do not replace those prerequisites.</p>
+  </div>
+</article>
+</section>
+<section class="chapter" id="ch-recovery"><h2 class="chapter-label">Troubleshooting</h2>
+<article class="card" id="card-troubleshooting">
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Recover without consuming another seat's quota</span><span class="card-sub">Stop on access errors; bound retries on temporary failures.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body">
+    <div class="table-wrap"><table>
+      <caption>Symptoms and safe recovery</caption>
+      <thead><tr><th scope="col">Symptom</th><th scope="col">Action</th></tr></thead>
+      <tbody>
+        <tr><td>Wrong directory, missing subscription or resource group</td><td>Check the account and assigned directory. Ask the facilitator to verify your seat details. Do not create a new group or use another subscription.</td></tr>
+        <tr><td>403, permission error or Azure Policy rejection</td><td>Stop and share the failed operation and request/correlation ID if available. The facilitator resolves access or policy; do not assign yourself broader roles.</td></tr>
+        <tr><td>Primary model lacks 100,000 TPM</td><td>Use the documented fallback order. If all three are blocked, stop. Never free capacity by changing someone else's deployment.</td></tr>
+        <tr><td>Fireworks unavailable, terms blocked, or Global Standard / 50,000 TPM not offered</td><td>Ask the facilitator to check subscription enablement, provider eligibility, region and quota. Do not switch to provisioned capacity or another region.</td></tr>
+        <tr><td>Deployment pending or creation times out</td><td>Reopen Build &rarr; Models and inspect the existing deployment before any retry. Refresh at most twice, one minute apart; record pending work for the facilitator. Fireworks can take up to 30 minutes.</td></tr>
+        <tr><td>Playground shows 429 or a transient error</td><td>Wait 30 seconds and retry once, then wait 60 seconds and retry once. If it still fails, stop and share the deployment name, status and request ID. Do not raise TPM.</td></tr>
+        <tr><td>Playground has no reply after two minutes</td><td>Check the selected deployment and its status. Ask the facilitator before resubmitting; do not repeatedly send the same request.</td></tr>
+      </tbody>
+    </table></div>
+    <p>Share only the operation, resource/deployment name, error code and correlation ID needed for diagnosis. Do not share passwords, access tokens or keys.</p>
+  </div>
+</article>
+</section>
+<section class="chapter" id="resume-cleanup"><h2 class="chapter-label">Resume, reset and cleanup</h2>
+  <p><strong>Resume:</strong> sign in to the same tenant, reopen your recorded project and check the existing deployments' model IDs, types, TPM and status. Continue at the first incomplete checkpoint. Never create a second project just because a page reload lost your place.</p>
+  <p><strong>Reset:</strong> use <strong>New chat</strong> in each playground. If a resource or deployment must be repaired, ask the facilitator to inspect your recorded names first; do not delete and redeploy to recover from an unknown status.</p>
+  <p><strong>Cleanup:</strong> keep the project and all three deployments for the workshop. After the final lab, give the facilitator your seat number, resource group, parent-resource name, project name and deployment names, including anything still pending or failed. The facilitator owns deletion. Do not delete the shared subscription, resource group or anyone else's resources.</p>
+  <div class="reveal"><button type="button" class="reveal-toggle" aria-expanded="false">Optional: explain the deployment to a peer</button><div class="reveal-body"><p>Explain why you selected custom settings, why a fallback changes the model rather than capacity, and why Sweden Central does not constrain Global Standard inference to Sweden. Do not add deployments or increase quota for this extension.</p></div></div>
+</section>
+<section class="chapter" id="ch-sources"><h2 class="chapter-label">Reference</h2>
+  <p>Portal guidance checked on <time datetime="2026-09-30">30 September 2026</time>. The TPM allocations above are workshop settings, not published model limits. Available quota, permissions and successful inference must be verified in your assigned subscription.</p>
+  <ul>
+    <li><a href="https://learn.microsoft.com/azure/foundry/how-to/create-projects">Create a Foundry project</a>: project selector, advanced options and parent resource.</li>
+    <li><a href="https://learn.microsoft.com/azure/foundry/foundry-models/how-to/deploy-foundry-models">Deploy Foundry Models</a>: Discover catalog, custom settings, Build deployment list and playground.</li>
+    <li><a href="https://learn.microsoft.com/azure/foundry/foundry-models/concepts/deployment-types">Deployment types</a>: Global Standard processing location.</li>
+    <li><a href="https://learn.microsoft.com/azure/foundry/foundry-models/concepts/models-sold-directly-by-azure-region-availability#global-standard">Azure-sold model regional availability</a>: check the selected GPT model and version.</li>
+    <li><a href="https://learn.microsoft.com/azure/foundry/how-to/fireworks/enable-fireworks-models">Fireworks on Foundry</a>: subscription enablement, GLM Flash offer, custom rate limits and deployment timing.</li>
+  </ul>
+</section>
+</main>
+<section class="takeaway" id="closing"><p>Your first model replies connect identity, project, deployment and inference. Keep the same resources for the next steps.</p></section>
+<footer class="doc-footer">Microsoft Foundry One-Day Workshop</footer>
+</div>
+</body>
+</html>
