@@ -1,5 +1,89 @@
 # Knowledge lab qualification boundary
 
+## Student-identity keyless rehearsal, 2026-10-01
+
+A newly created, unrelated Entra account signed into a task-only Edge profile.
+Its verified profile matched the test identity. Access was limited to the
+isolated rehearsal group: Owner, Foundry User and Search Index Data Contributor
+(plus Storage Blob Data Contributor, unused by this path). It had no Owner
+access to shared groups. This proves the personal-group role contract, not a
+reduced least-privilege configuration.
+
+Basic Search in West Europe and Foundry in Sweden Central had local
+authentication disabled. Search's system identity held Cognitive Services User
+on Foundry; the project identity held Search Index Data Reader on Search.
+The student connected Search with Project Managed Identity, created a native
+file source and a Low/extractive KB, and used the prepared
+`text-embedding-3-small` / `1` and `gpt-5-mini` / `2025-08-07` deployments.
+The portal explicitly reported managed-identity model authentication.
+Source and vectorizer definitions had null API keys and null authIdentity.
+
+Bulk upload returned eight HTTP 429 responses, not 403. Completion was 12/20;
+failed-file-only Retry reached 19/20 and a second Retry reached 20/20. The proxy
+did not supply Retry-After or x-ms-request-id in the observed retry response.
+All 20 distinct PDF names appeared in 300 indexed chunks; a stored embedding
+had 1,536 nonzero dimensions and live text vectorization returned the acoustic
+guitar evidence. No Storage account or keys were used.
+
+The student's actual Playground response completed a
+`knowledge_base_retrieve` MCP call, returned Alder Works, S1 and 1962, and cited
+matching acoustic-guitar snippets supporting all three facts. The raw response,
+not a second privileged inference, was retrieved and checked. The portal's
+new-agent default included Web search; it was removed before the query.
+
+The same student also exercised Add sources / Use existing sources / Add
+existing, created a second KB from the already processed 20-file source, and
+attached it to the existing agent. A new version containing only that KB
+returned the same cited facts. This is the guide's prepared-source core path;
+it removes bulk-upload throttling and resource provisioning from the timebox.
+The existing comparison/evaluation settings remain unchanged; this rehearsal
+did not resubmit the previously qualified 20-row evaluation pair.
+
+A separate operator REST probe used standard extraction with no aiServices,
+embedding or chat model API keys. West Europe Search called Sweden Central
+Foundry/Content Understanding with its system identity. Actual extracted
+content represented the raster chart as `2022 -> 502`; an MCP-backed agent
+answered 502 with a citation to that image-derived chunk. Only
+acoustic-guitar.pdf was probed. This does not qualify the complete multimodal
+corpus, the portal's Advanced settings, Spain Central or concurrent seats.
+
+Current first-party region tables list agentic retrieval and AI enrichment in
+Sweden Central and West Europe, but not Spain Central. Content Understanding
+lists Sweden Central and West Europe, not Spain Central. Earlier Search
+capacity rejection and the new embedding quota rejection were not bypassed:
+deployment resumed only after authorized unrelated cleanup released quota.
+The models retained GlobalStandard; no automatic SKU/region change occurred.
+
+Private evidence remains under ignored `.workshop/knowledge-base/`: native
+profile/portal observations, source definition, index/vector checks, the
+original student response, prepared-source selection/answer and standard
+chart chunks/response. Room concurrency, complete 45-minute delivery pacing,
+least-privilege access and Blob ingestion remain unqualified.
+
+Independent review inspected the actual changed guide and private evidence.
+The Student tester newly created a review KB from the existing 20-file source
+with the documented Low/extractive settings, and passed offline keyboard,
+disclosure, copy/download and theme checks. Attachment and answer checks used
+the recorded student journey; the reviewer did not claim a fresh complete
+evaluation pair or room rehearsal. The access/destructive-safety reviewer found
+no material issue. Educator review identified an unexecutable attendee inventory
+check: complete distinct-filename certification now belongs to operator
+`prepare`/`verify` preflight, separately from attendee relevance checking.
+The follow-up found no new material learning issue; its explicit operator-gate
+and review-record requests are included here and in the operator README.
+
+Thirty targeted content/model-continuity tests passed, and the canonical guide
+validator passed 308 checks in all eight palettes, offline, reduced-motion,
+print and no-JavaScript modes. A broader model-continuity run also encountered
+pre-existing Chapter 6/7 expectations; those unrelated guides were not changed.
+
+Final Educator verification confirmed the explicit inventory preflight and
+review-evidence repairs with no blocking/material issue. The new rehearsal
+resource group was deleted and its absence verified. The new test user and
+group were permanently deleted; the local TAP export and task browser profile
+were removed. Foundry soft-delete retention was not purged. No original
+workshop resources or identities were changed by this rehearsal.
+
 ## Concise reading guide, 2026-10-01
 
 The guide was shortened from 3,616 to 1,820 body words (about 50%). Core paths,

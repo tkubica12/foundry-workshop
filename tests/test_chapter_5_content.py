@@ -62,6 +62,24 @@ def test_manual_query_is_an_actual_dataset_row():
     assert "groundedness score alone" not in source.lower() or "not completion" in source
 
 
+def test_core_uses_prepared_keyless_source_and_separates_upload_extension():
+    source = GUIDE.read_text(encoding="utf-8")
+    core = source.split('<article class="card" id="card-source">', 1)[1].split("</article>", 1)[0]
+    steps, optional = core.split('Optional: upload your own PDF source', 1)
+    assert "Add sources &rarr; Use existing sources" in steps
+    assert "20 files" in steps
+    assert "no Storage account" in steps
+    assert "<strong>Upload files</strong>" not in steps
+    assert "API key authentication is disabled" in optional
+    assert "HTTP 429" in optional and "at most twice" in optional
+    assert "Search Index Data Contributor" in source
+    assert "Cognitive Services User" in source
+    assert "Do not create a new service during the core lab" in source
+    assert "Spain Central lists semantic ranking but not agentic retrieval" in source
+    assert "one-document probe does not certify all charts" in source
+    assert "facilitator's assigned private Blob container" not in source
+
+
 def sample_state():
     group = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-knowledge-rehearsal-11111111"
     account = group + "/providers/Microsoft.CognitiveServices/accounts/fwknowledge22222222"

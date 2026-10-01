@@ -20,7 +20,7 @@ the intended attendee identity before advertising it as ready to deliver.
 | 10:45-12:00 | 3. Evaluate and improve | [Lab 3](docs/guides/chapter-3-evaluate-agent.html): about 55 minutes for the guided path; retain discussion and recovery time. |
 | 12:00-12:45 | Lunch | |
 | 12:45-14:00 | 4. Connect tools | [Lab 4](docs/guides/chapter-4-connect-tools.html): 55-minute core with browser-authored toolbox curation from prepared MCP connections, a scoped assignment and 15 minutes of trace inspection. Reserve the rest for demonstration, discussion and recovery. Qualify attendee permissions and room pacing before delivery. |
-| 14:00-15:00 | 5. Ground with knowledge | [Lab 5](docs/guides/chapter-5-knowledge-base.html): 45-minute core with a balanced 20-case before/after comparison over 20 synthetic PDFs. Reserve 15 minutes for recovery and architecture. Keep the full 100-case run as a separately timed extension; preflight model/judge throughput and Search capacity. |
+| 14:00-15:00 | 5. Ground with knowledge | [Lab 5](docs/guides/chapter-5-knowledge-base.html): 45-minute core with a balanced 20-case before/after comparison over 20 synthetic PDFs. Prepare Search, identity assignments and the processed PDF source before the lab; keep uploads and the full 100-case run as extensions. Reserve 15 minutes for recovery and architecture; preflight model/judge throughput and room capacity. |
 | 15:00-15:15 | Break | |
 | 15:15-15:40 | 6. Add managed memory | [Lab 6](docs/guides/chapter-6-managed-memory.html): 20-minute core plus recovery and discussion. Compare no-memory chats with stored profiles and summaries; use the same identity and isolated per-run resources. |
 | 15:40-16:15 | Connect it: code-first and channel architecture | Connect prompt agents, managed Memory, hosted code and channel publication. The full optional Lab 7 is a separate 45-minute extension, not squeezed into this discussion. |
@@ -36,7 +36,8 @@ Use demonstrations for breadth and one meaningful outcome per lab. Keep optional
 extensions outside the core timebox. A published guide does not certify a live
 environment. Lab 4 has a guide and live API qualification; its portal path
 still needs attendee-identity rehearsal. Lab 5 has isolated live API and portal
-evidence; attendee permissions, room concurrency and timing remain separate
+evidence, including a new personal-group student identity and the prepared-source
+path; least-privilege permissions, room concurrency and timing remain separate
 qualification gates. Lab 6 has an isolated native portal rehearsal; attendee-role
 access, room concurrency and its timebox remain separate qualification gates.
 Lab 7's qualification is tracked separately in

@@ -17,7 +17,7 @@ From the repository root:
 
 ```powershell
 python evals\grounding\prepare.py --bundle
-python student\labs\knowledge-base\scripts\azure.py deploy --state .workshop\knowledge-base\rehearsal\state.json --subscription <subscription-id>
+python student\labs\knowledge-base\scripts\azure.py deploy --state .workshop\knowledge-base\rehearsal\state.json --subscription <subscription-id> --tier basic --search-region westeurope
 python student\labs\knowledge-base\scripts\azure.py prepare --state .workshop\knowledge-base\rehearsal\state.json
 python student\labs\knowledge-base\scripts\azure.py evaluate --state .workshop\knowledge-base\rehearsal\state.json --phase baseline --limit 5
 python student\labs\knowledge-base\scripts\azure.py evaluate --state .workshop\knowledge-base\rehearsal\state.json --phase baseline --limit 20
@@ -32,7 +32,11 @@ The first command verifies PDF hashes and builds exact attendee download assets.
 evidence type. Other nonzero limits use prefixes for smoke testing; omit the
 limit for the full 100. Saved run fingerprints prevent resuming against changed
 references, and strict row checks require complete answers and both scores.
-Deployment defaults to Serverless Search in Sweden Central. If creation is
+The command deliberately selects the tested Basic/West Europe combination,
+with models in Sweden Central. The script's unqualified default remains
+Serverless Search in Sweden Central; do not omit the explicit flags for this
+rehearsal. Neither documented regional support nor a previous deployment
+guarantees current capacity. If creation is
 rejected, reconcile the resource list first. If no Search resource exists, an
 explicit retry can use `deploy ... --tier basic --search-region westeurope`.
 The script refuses migration after Search exists. Region and cost changes must
@@ -46,6 +50,51 @@ current admission and quota before another clean deployment. Keys are disabled.
 The Search service calls models under its own managed identity; the agent uses
 the project identity and only the vetted `knowledge_base_retrieve` MCP tool.
 Reference fields are not sent to the target agent.
+
+## Delivery preflight
+
+Prepare the assigned Search service and all 20 minimal-extraction PDFs before
+the session. The core guide selects the existing source, then creates and
+attaches a KB to the attendee's baseline agent. Native bulk upload is optional:
+the student rehearsal needed two failed-file-only retries for HTTP 429.
+`prepare` uploads sequentially, reconciles existing filenames and verifies the
+real cited answer. Require `prepare`/`verify` to pass the exact inventory of
+20 distinct corpus filenames before delivery; neither file nor chunk counts
+alone certify it. Do not introduce shared Blob storage as a delivery fallback.
+
+The observed student account had Owner on its isolated resource group,
+Foundry User and Search Index Data Contributor. This is a personal-group
+workshop contract, not proof of a least-privilege authoring profile.
+
+| Principal | Required access and scope |
+| --- | --- |
+| Attendee author | Search Service Contributor for Search object authoring; Search Index Data Contributor for uploads, on the assigned Search service |
+| Attendee agent author | Foundry User plus connection-management permission; the tested account inherited control-plane access from its personal-group Owner assignment |
+| Foundry project managed identity | Search Index Data Reader on the assigned Search service |
+| Search system-assigned managed identity | Cognitive Services User on the resource hosting embedding/planning deployments |
+
+Owner alone does not provide direct Search object/content permissions. Author permissions do not
+replace either managed-identity assignment. Keep Search and Foundry local
+authentication disabled; the portal must show Project Managed Identity for
+the Search connection and the keyless notice for planning/embeddings.
+If model resources are shared, the operator assigns every prepared Search
+identity before delivery; attendees need no Owner permission on that shared
+group. Verify with the actual attendee identity, not only the operator.
+
+Check region support and quota separately. Spain Central's current Search
+matrix does not list agentic retrieval or AI enrichment; it is not an approved
+fallback for this lab. Sweden Central lists agentic retrieval but has rejected
+new Search services for capacity. Admit and verify the complete room before
+delivery, including model/judge throughput and permission propagation.
+
+The separate standard-extraction REST probe used Search API
+`2026-08-01-preview`, `contentExtractionMode: standard`, the Foundry
+`services.ai.azure.com` endpoint in `aiServices.uri`, and the existing
+`chatCompletionModel` and `embeddingModel`; every API key and explicit
+`authIdentity` was omitted. The same Search system identity was authorized on
+Foundry. One PDF produced image-derived chart evidence and a cited answer.
+This is not implemented by `prepare`, exposed by the native file dialog, or a
+full-corpus qualification. Keep it outside the core and use a separate source.
 
 ## Recovery and destructive scope
 
