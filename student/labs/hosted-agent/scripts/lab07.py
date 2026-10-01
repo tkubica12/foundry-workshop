@@ -146,6 +146,7 @@ def run(args):
     print("No backend, toolbox, model, shared registry or role changes.", flush=True)
     with AIProjectClient(
         endpoint=config["project_endpoint"], credential=AzureCliCredential(),
+        allow_preview=True,
         retry_total=0, connection_timeout=20, read_timeout=90,
     ) as project:
         if args.operation == "preflight":

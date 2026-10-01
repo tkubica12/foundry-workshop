@@ -17,7 +17,7 @@ def main():
             with urlopen("http://127.0.0.1:8088/readiness", timeout=2) as response:
                 assert response.status == 200
             break
-        except (HTTPError, URLError, TimeoutError):
+        except (OSError, TimeoutError):
             time.sleep(1)
     else:
         raise RuntimeError("Protocol fixture never became ready")

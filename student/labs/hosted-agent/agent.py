@@ -116,7 +116,7 @@ async def serve() -> None:
 
     credential = DefaultAzureCredential()
     endpoint = require_https(os.environ["FOUNDRY_PROJECT_ENDPOINT"], foundry=True)
-    with AIProjectClient(endpoint=endpoint, credential=credential) as project:
+    with AIProjectClient(endpoint=endpoint, credential=credential, allow_preview=True) as project:
         with project.get_openai_client() as client:
             model = ChatOpenAI(
                 model=os.environ["MODEL_DEPLOYMENT_NAME"],

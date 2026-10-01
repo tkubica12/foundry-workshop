@@ -62,6 +62,25 @@ Content recording is opt-in and permitted only with the synthetic workshop data.
 The hosting library configures the exporter; the LangChain callback shares its
 OpenTelemetry provider rather than creating a duplicate exporter.
 
+## Live Responses journey
+
+Use `scripts\invoke.py` with the matching active deployment receipt. `start`
+sends the fixed read-only complaint/partner prompt. Each command prints its
+Response ID and caller Trace ID. Review the exact pending tool/arguments, then
+approve one displayed ID at a time; the script never approves future calls.
+
+```powershell
+uv run --project student\labs\hosted-agent python student\labs\hosted-agent\scripts\invoke.py start --config .workshop\hosted-agent\seat-s01.config.json --state .workshop\hosted-agent\seat-s01.state.json --conversation .workshop\hosted-agent\read.json
+uv run --project student\labs\hosted-agent python student\labs\hosted-agent\scripts\invoke.py approve --config .workshop\hosted-agent\seat-s01.config.json --state .workshop\hosted-agent\seat-s01.state.json --conversation .workshop\hosted-agent\read.json --approval-id APPROVAL-ID
+```
+
+Replace `APPROVAL-ID` with the ID from the latest response. To qualify denial,
+start a separate `reject.json` chain and use `reject` instead of `approve`,
+with that chain's current ID. Expect `interrupt_rejected` and a nonzero exit
+code. Check actual model/tool spans and returned facts in the assigned trace
+viewer; terminal answer text alone is insufficient. Each HTTP continuation can
+have its own trace ID; the Responses receipts link the chain.
+
 ## Recovery, reset and cleanup
 
 - Timeout with a known version: run `status`, not a new deployment.
@@ -70,6 +89,10 @@ OpenTelemetry provider rather than creating a duplicate exporter.
   receipt before recovering its version. Never blindly create a second version.
 - A held `.lock`: wait for the owning command. After a confirmed terminated
   process, inspect the receipt and live agent before removing that exact lock.
+- An uncertain invocation: preserve its `.pending.json`. Do not retry the POST
+  or remove the marker without correlating its trace/response in Foundry.
+  A conversation lock serializes validation and persistence; a failed transport
+  never becomes an automatic approval replay.
 - Reset: start a new conversation. Pending approval remains bound to its original
   conversation; never replay it against another response.
 - Cleanup: confirm the exact receipt below. The script refuses different owners
