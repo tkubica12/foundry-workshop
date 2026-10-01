@@ -1,5 +1,16 @@
 # Knowledge lab qualification boundary
 
+## Concise reading guide, 2026-10-01
+
+The guide was shortened from 3,616 to 1,820 body words (about 50%). Core paths,
+downloads, pinned versions, judge-only references, 20/40 result checks, retrieval
+evidence, failed-file-only Retry, capacity fallback and shared-resource cleanup
+boundaries remain. Existing live evaluation and ingestion evidence below is
+unchanged; no duplicate cloud job was submitted to validate editorial changes.
+The combined source/browser/navigation suite passed 138 tests and the canonical
+validator passed 308 checks in all eight palettes, offline and without JavaScript.
+Independent Educator/local Student and safety reviews reported no material issues.
+
 The guide uses fixed judge-only curated answer references for corpus agreement
 and Response completeness for answer coverage. Actual retrieved content and
 citations are checked independently. Reference answers are never ingested or

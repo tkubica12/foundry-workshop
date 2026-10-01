@@ -1,9 +1,8 @@
 # Lab 04 qualification
 
-Execution date: **2026-09-30**. Scope: Lab 4 source, direct MCP journeys and
-an isolated live Foundry API integration. **The portal/attendee-identity journey
-is not qualified.** Portal sign-in and click-path testing were explicitly
-deferred; do not advertise this as a delivery-ready lab.
+Execution dates: **2026-09-30 and 2026-10-01**. Scope: source, direct MCP,
+isolated Foundry API tests and the operator's signed-in Edge portal.
+**Attendee-role access and room delivery remain separately unqualified.**
 
 ## Observed
 
@@ -58,12 +57,59 @@ connection, approval controls, response-to-trace links, trajectory inputs/output
 and exact call correlation. A connected monitoring resource or ingested API
 telemetry is not proof that the attendee can inspect those fields in the portal.
 
-Measure the 50-minute core and verify rate-window capacity for the room. Every-call
+Measure the 55-minute core and verify rate-window capacity for the room. Every-call
 approval is intentional but accumulates model context; optional note/denial work
 must not consume core trace time. An API-only run is not a Student tester's
 completed browser journey.
 
 ## Independent reviews
+
+### Concise guides, 2026-10-01
+
+The MCP and knowledge guides were shortened by about half, preserving canonical
+reading controls, stable anchors, exact copyable inputs and safety checkpoints.
+Both share explicit previous/next navigation. The final source/navigation/browser
+suite passed 138 tests; canonical offline/no-JavaScript/print validation passed
+278 checks for Lab 4 and 308 for Lab 5 at 1280x720 in all eight palettes.
+
+Independent Educator/local Student and safety reviews inspected the actual
+reductions and found no blocking/material issues. The Educator also passed 33
+focused checks. A narrow follow-up approved the distinction between conversational
+write confirmation and runtime approval cards for read calls.
+
+### Observed Edge controls
+
+Actual portal registration, toolbox creation/publishing, seven-tool curation,
+Microsoft Entra / Agent Identity attachment, individual Approve once choices,
+both-server reads and conversation tool input/output/metadata were exercised.
+Connection names are limited to 27 characters in the tested UI. Toolbox-to-agent
+attachment uses its MCP endpoint, not an observed native one-click shortcut.
+
+The first portal create succeeded after recovery from ERR_NETWORK. The generated
+case subsequently disappeared during prolonged inactivity; no seed record was
+used as a substitute.
+
+On 2026-10-01 the refreshed Edge completed the concise create, proposal and
+assignment prompts through real portal controls and individual Approve once
+cards. The new case was unassigned at version 1; the verified eligible partner
+was assigned and read back at version 2 with unchanged status `new`. An
+independent direct MCP read confirmed the same marker, ID, version and partner.
+No seed/partner record was changed.
+
+The actual portal conversation viewer then opened the assignment's
+`execute_tool` span and Metadata tab. Its approved complaint/partner IDs,
+`expected_version`, response/trace identifiers and `gen_ai.tool.call.result`
+matched the version-2 readback. A corresponding inner `tools/call` span was
+visible separately. Screenshots and raw metadata remain in private evidence;
+the generated case was subsequently deleted by exact ID/current version, and
+its marker search confirmed absence.
+
+The existing GPT-5.2 deployment hit token-rate limits during rehearsal. Only
+the isolated test agent was switched to an existing GPT-5.6 deployment; no
+deployment, quota, role or backend scaling was created or increased. This is
+not evidence that the room's prepared model has enough aggregate capacity.
+
+### Earlier qualification
 
 - Educator and fresh-context Student review inspected the guide and inputs and
   exercised the actual local reading UI. Ten Lab 4 tests passed; no blocking or
@@ -86,7 +132,13 @@ The generated qualification case was already absent; no backend deletion was
 performed for it. Direct verifier cases were explicitly deleted by their own
 exact-ID cleanup. The original project, models, Application Insights and both
 MCP applications remain unchanged. Private receipts and telemetry evidence remain
-available for audit; no retained temporary cloud configuration needs follow-up.
+available for audit.
+
+The separate browser-rehearsal configuration (one operator-owned test agent,
+one toolbox and three project connections) is retained for operator inspection.
+Its exact names are in private session receipts, not attendee source. Remove
+only that scope when it is no longer needed; the final generated complaint was
+already cleaned up. Shared infrastructure and role/scaling settings are unchanged.
 
 ## Evidence manifest
 
