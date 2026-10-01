@@ -360,10 +360,24 @@ My contact email is alex.customer@example.com.</code></pre><div class="lab-copy-
     <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Your agent remains available, its original instructions are unchanged, and you can distinguish detected data from blocked data. A neutral prompt may already produce a friendly answer; improvement must be measured, not assumed.</p></div>
   </div>
 </article>
+<article class="card" id="card-agent-channels">
+  <h3 class="card-head"><button type="button" class="card-toggle" aria-expanded="false"><span class="card-num" aria-hidden="true"></span><span class="card-titles"><span class="card-title">Explore how applications and other agents reach your agent</span><span class="card-sub">A two-minute UI tour; no channel deployment.</span></span><span class="card-mark" aria-hidden="true"></span></button></h3>
+  <div class="card-body">
+    <p>Open your agent's <strong>Details</strong> tab and inspect <strong>Channels</strong> and the available protocol information. Connect each option to its purpose:</p>
+    <ul>
+      <li><strong>Responses API:</strong> call the agent from your own application or custom UI.</li>
+      <li><strong>Agent2Agent (A2A):</strong> let other agents discover and call it in a multi-agent solution. Enabling incoming A2A currently requires the API or SDK, not a portal toggle.</li>
+      <li><strong>Teams &amp; Microsoft Copilot:</strong> bring the agent into workplace conversations. Leave publication for the later channel lab.</li>
+      <li><strong>Web app:</strong> if a ready-to-open example is offered, open it and resend the <a href="#customer-prompt">synthetic customer message</a>. Treat it as a starting UI, not a production application.</li>
+    </ul>
+    <p>Do not publish, grant access or deploy resources in this step. If the web example or protocol information is absent, ask the facilitator to show the prepared example; keep your agent unchanged.</p>
+    <div class="checkpoint"><span class="checkpoint__label">Check</span><p>Identify the path for your own UI, for another agent and for Teams/Copilot. If you opened the web example, confirm it replies to your message.</p></div>
+  </div>
+</article>
 </section>
 </main>
 <section class="takeaway" id="closing"><p>You created an agent, tried different models, enabled guardrails, and inspected traces.</p></section>
-<footer class="doc-footer"><p>Tracing menu labels checked <time datetime="2026-10-01">1 October 2026</time>: <a href="https://learn.microsoft.com/azure/foundry/observability/how-to/trace-agent-setup">Set up tracing in Microsoft Foundry</a>. Confirm the live portal and your assigned permissions before running the lab.</p></footer>
+<footer class="doc-footer"><p>Documentation checked <time datetime="2026-10-01">1 October 2026</time>: <a href="https://learn.microsoft.com/azure/foundry/observability/how-to/trace-agent-setup">Set up tracing</a>, <a href="https://learn.microsoft.com/azure/foundry/agents/how-to/enable-agent-to-agent-endpoint">Incoming A2A</a> and <a href="https://learn.microsoft.com/azure/foundry/agents/how-to/publish-copilot">Teams and Microsoft Copilot channels</a>. Confirm the live portal and your assigned permissions before running the lab.</p></footer>
 </div>
 </body>
 </html>

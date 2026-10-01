@@ -124,3 +124,17 @@ def test_lab_2_omits_the_removed_resume_reset_and_cleanup_section():
     assert 'id="resume-cleanup"' not in html
     assert "Resume, reset and cleanup" not in html
     assert "<strong>Reset this exercise:</strong>" not in html
+
+
+def test_final_channel_tour_is_short_and_does_not_publish():
+    html = source()
+    tour = html.split('id="card-agent-channels"', 1)[1].split("</article>", 1)[0]
+    assert html.index('id="card-agent-channels"') > html.index('id="card-decision-2"')
+    for required in (
+        "<strong>Details</strong>", "<strong>Channels</strong>",
+        "Responses API", "Agent2Agent (A2A)", "Teams &amp; Microsoft Copilot",
+        "Web app", 'href="#customer-prompt"', "not a portal toggle",
+        "Do not publish, grant access or deploy resources",
+        "keep your agent unchanged", "later channel lab",
+    ):
+        assert required in tour

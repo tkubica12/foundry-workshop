@@ -81,6 +81,10 @@ def test_chapter_2_text_steps_and_copy_work_on_mobile(browser, dark):
         assert page.locator("img").count() == 0
         assert "Guardrails" in page.locator("#card-guardrail-2").inner_text()
         assert "Trajectories" in page.locator("#card-decision-1").inner_text()
+        tour = page.locator("#card-agent-channels")
+        assert "Responses API" in tour.inner_text()
+        assert "Agent2Agent (A2A)" in tour.inner_text()
+        expect(tour.locator('a[href="#customer-prompt"]')).to_be_visible()
         page.evaluate("""Object.defineProperty(navigator, "clipboard", {
             configurable: true, value: {writeText: async text => {window.copied = text;}}
         })""")
